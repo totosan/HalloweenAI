@@ -1,0 +1,7 @@
+{
+    "features":[
+        {"name":"orb","value":false},
+        {"name":"click","value":false},
+        {"name":"binarizer","value":false}
+    ]
+}
