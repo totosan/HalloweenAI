@@ -12,6 +12,7 @@ from netifaces import interfaces, ifaddresses, AF_INET
 
 from Cam.VideoCapture import VideoCapture
 from Cam.ImageServer import ImageServer
+from FaceAPI import FaceDetection
 
 try:
     import ptvsd
@@ -31,7 +32,7 @@ def ip4_addresses():
     return ip_list
 
 def main(
-        videoPath ="",
+        videoPath ="https://youtu.be/qEMC2bKC0wI",
         verbose = False,
         noIotHub = False,
         videoWidth = 160,
@@ -41,15 +42,17 @@ def main(
         ):
 
     global videoCapture
-
+    injectedAnalyzer = FaceDetection()
+    
     print("\nPython %s\n" % sys.version )
     with VideoCapture(videoPath, 
                         verbose,
                         videoWidth,
                         videoHeight,
                         fontScale,
-                        imageProcessingEndpoint) as videoCapture:
-        videoCapture.Initialize(motorDriver)
+                        imageProcessingEndpoint,
+                        injectedAnalyzer=injectedAnalyzer) as videoCapture:
+        print(f'Analyzer: {injectedAnalyzer}')
         videoCapture.start()
 
 def __convertStringToBool(env):

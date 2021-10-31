@@ -1,5 +1,12 @@
 __pycache__
 env3
+.venv
+*.deb
+
+#specific files
+.env
+temp.jpg
+video.mp4
 
 # specific folder
 /hardware
