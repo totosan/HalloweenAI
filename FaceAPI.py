@@ -3,6 +3,7 @@ import io
 import glob
 import os
 import sys
+from threading import Thread
 import time
 import uuid
 import requests
@@ -27,6 +28,7 @@ class FaceDetection():
         # Create an authenticated FaceClient.
         self.face_client = FaceClient(ENDPOINT, CognitiveServicesCredentials(KEY))
         self.samplenum = 0
+
         
     def detect_faces(self, frame):
         # We use detection model 3 to get better performance.
@@ -36,7 +38,7 @@ class FaceDetection():
         copyFrame = open(imageName,"r+b")
         detected_faces = self.face_client.face.detect_with_stream(copyFrame, detection_model='detection_03')
         if detected_faces:
-           print(' face detected from image')
+            print(' face detected from image')
 
         # Convert width height to a point in a rectangle
         def getRectangle(faceDictionary):
