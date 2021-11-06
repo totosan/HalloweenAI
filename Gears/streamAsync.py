@@ -1,13 +1,16 @@
 # import required libraries
-from vidgear.gears import VideoGear
+import datetime
+import sys
 import numpy as np
 import cv2
-from threading import Thread
-from multiprocessing.pool import ThreadPool
-from collections import deque
+import mpipe
+import coils
 
+from vidgear.gears import VideoGear
 from FaceAPI import FaceDetection
+
 PROCESS_NUM = 2
+
 class gearIt():
     
     def __init__(self, ImageServer) -> None:
@@ -16,9 +19,9 @@ class gearIt():
         self.stream_org = VideoGear(source="video.mp4").start()
         self.frame = None
         self.detection = FaceDetection()
-        self.pool = ThreadPool(processes=PROCESS_NUM)
-        self.pending_task = deque()
-        
+        # Monitor framerates for the given seconds past.
+        self.framerate = coils.RateTicker((1,5,10))
+
         # init http stream
         imageServer = ImageServer(8000, self)
         imageServer.start()
@@ -26,34 +29,27 @@ class gearIt():
     def get_display_frame(self):
         return self.frame
 
-    def processFrame(self,frameNumber, frame):
-        if frameNumber % 5 == 0:
-            frame = self.detection.detect_faces(frame)
-        return frame            
-
+    def processFrame(self, frame):
+        frame = self.detection.detect_faces(frame)
+        return frame
+    
+    def processFrameDummy(self, frame):
+        return (frame,2)
+    
+    def displayFrameOnServer(self,faceFrame):
+        fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
+        self.frame = cv2.imencode('.jpg', faceFrame)[1].tobytes()
+        
     def run(self):
+        stage1 = mpipe.OrderedStage(self.processFrameDummy)
+        stage2 = mpipe.OrderedStage(self.displayFrameOnServer)
+        stage1.link(stage2)
+        pipe = mpipe.Pipeline(stage1)
+        
         # loop over
-        frames = 0
         while True:
-            
-            while len(self.pending_task) > 0 and self.pending_task[0].ready():
-                faceFrame = self.pending_task.popleft().get()
-                self.frame = cv2.imencode('.jpg', faceFrame)[1].tobytes()
-                
-            if len(self.pending_task) < PROCESS_NUM:
-                # read un-stabilized frame
-                frame_org = self.stream_org.read()
-                if not frame_org is None:
-                    frames = frames +1
-                    if frames % 5 == 0:
-                        t = self.pool.apply_async(self.processFrame, (frames,frame_org.copy()))
-                        self.pending_task.append(t)
-                    else:
-                        self.frame = cv2.imencode('.jpg', frame_org)[1].tobytes()
-                    
-                    print(frames)
-            
-
+            # read un-stabilized frame
+            frame_org = self.stream_org.read()
+            pipe.put(frame_org)
         # safely close both video streams
         self.stream_org.stop()
-

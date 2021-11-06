@@ -28,6 +28,7 @@ class ImageStreamHandler(tornado.websocket.WebSocketHandler):
             if frame != None:
                 encoded = base64.b64encode(frame)
                 self.write_message(encoded, binary=False)
+
         else:
             self.mouseEventData = json.loads(msg)
             self.videoCapture.Mouse = self.mouseEventData
