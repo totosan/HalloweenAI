@@ -1,7 +1,7 @@
 #!/usr/local/python/bin/python
 
 from Cam.ImageServer import ImageServer
-from Gears.webGear import gearIt
+from Gears.webGear_frames import gearIt
 #from Gears.streamAsync import gearIt
 
 def run():
