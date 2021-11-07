@@ -44,42 +44,54 @@ class gearIt(object):
         web.config["generator"] = self.my_frame_producer1
         
         # run this app on Uvicorn server at address http://localhost:8000/
-        uvicorn.run(web(), host="0.0.0.0", port=8000)
+        uvicorn.run(web(), host="0.0.0.0", port=8081)
 
         # close app safely
         web.shutdown()
         
     def processFrame(self, frame):
         frame = self.detection.detect_faces(frame)
+
+    
+    def display(self,frame):
+        fps='{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
+        utils.writeOSD(
+            frame,
+            ('FPS',fps),
+        )
         return frame
     
     # create your own custom frame producer
     async def my_frame_producer1(self):
-
+        stage1 = mpipe.OrderedStage(self.processFrame)
+        stage2 = mpipe.OrderedStage(self.display)
+        stage1.link(stage2)
+        pipe = mpipe.Pipeline(stage1)
+        
         # !!! define your first video source here !!!
         # Open any video stream such as "foo1.mp4"
         stream = cv2.VideoCapture(self.video)
         # loop over frames
         while True:
+            for result in pipe.results():
+                # handle JPEG encoding
+                encodedImage = cv2.imencode(".jpg", result)[1].tobytes()
+                # yield frame in byte format
+                yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
+                
             # read frame from provided source
             (grabbed, frame) = stream.read()
             # break if NoneType
             if not grabbed:
                 break
-
-            # do something with your OpenCV frame here
-            fps='{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
-            utils.writeOSD(
-                frame,
-                ('FPS',fps),
-            )
             
+            pipe.put(frame)
+
+
             # reducer frames size if you want more performance otherwise comment this line
-            frame = await reducer(frame, percentage=30)  # reduce frame by 30%
-            # handle JPEG encoding
-            encodedImage = cv2.imencode(".jpg", frame)[1].tobytes()
-            # yield frame in byte format
-            yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
+            #frame = await reducer(frame, percentage=30)  # reduce frame by 30%
+
+
             await asyncio.sleep(0.00001)
         # close stream
         stream.release()

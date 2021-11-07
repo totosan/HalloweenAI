@@ -1,15 +1,19 @@
 # import required libraries
 import datetime
+import multiprocessing
 import sys
+from mpipe.Pipeline import Pipeline
 import numpy as np
 import cv2
 import mpipe
 import coils
+import sharedmem
 
 from vidgear.gears import VideoGear
 from FaceAPI import FaceDetection
 
 PROCESS_NUM = 2
+shared = multiprocessing.Manager().dict()
 
 class gearIt():
     
@@ -21,35 +25,43 @@ class gearIt():
         self.detection = FaceDetection()
         # Monitor framerates for the given seconds past.
         self.framerate = coils.RateTicker((1,5,10))
+        self.pipe = None
+        self.pipe2 = None
 
         # init http stream
-        imageServer = ImageServer(8000, self)
+        imageServer = ImageServer(8001, self)
         imageServer.start()
 
     def get_display_frame(self):
-        return self.frame
-
+        return shared['out']
+        
     def processFrame(self, frame):
         frame = self.detection.detect_faces(frame)
         return frame
     
-    def processFrameDummy(self, frame):
-        return (frame,2)
-    
-    def displayFrameOnServer(self,faceFrame):
-        fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
-        self.frame = cv2.imencode('.jpg', faceFrame)[1].tobytes()
-        
+    def displayFrameOnServer(self, value):
+        global forServerFrame
+        while True:
+            faceFrame = self.pipe.get()
+            fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
+            frameBytes = cv2.imencode('.jpg', faceFrame)[1].tobytes()
+            shared['out']  = frameBytes
+
     def run(self):
-        stage1 = mpipe.OrderedStage(self.processFrameDummy)
-        stage2 = mpipe.OrderedStage(self.displayFrameOnServer)
-        stage1.link(stage2)
-        pipe = mpipe.Pipeline(stage1)
+        # processing frames
+        stageProcessFrame = mpipe.OrderedStage(self.processFrame,4)
+        #stageReadFrame.link(stageProcessFrame)
+        self.pipe = mpipe.Pipeline(stageProcessFrame)
+        
+        #distributing frames
+        stageDisplay = mpipe.OrderedStage(self.displayFrameOnServer)
+        self.pipe2 = mpipe.Pipeline(stageDisplay)
+        self.pipe2.put(True)
         
         # loop over
         while True:
             # read un-stabilized frame
             frame_org = self.stream_org.read()
-            pipe.put(frame_org)
+            self.pipe.put(frame_org)
         # safely close both video streams
         self.stream_org.stop()

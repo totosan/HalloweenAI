@@ -5,6 +5,7 @@ import os
 import sys
 from threading import Thread
 import time
+from typing import final
 import uuid
 import requests
 from urllib.parse import urlparse
@@ -36,10 +37,13 @@ class FaceDetection():
         imageName = 'temp.jpg'
         cv2.imwrite(imageName,frame) 
         copyFrame = open(imageName,"r+b")
-        detected_faces = self.face_client.face.detect_with_stream(copyFrame, detection_model='detection_03')
-        if detected_faces:
-            print(' face detected from image')
-
+        try:
+            detected_faces = self.face_client.face.detect_with_stream( copyFrame, detection_model='detection_03')
+        except Exception as e:
+            print(e)
+            detected_faces = None
+            
+            
         # Convert width height to a point in a rectangle
         def getRectangle(faceDictionary):
             rect = faceDictionary.face_rectangle
@@ -55,6 +59,8 @@ class FaceDetection():
                 start, end = getRectangle(face)
                 frame = cv2.rectangle(frame, start,end, (255, 0 , 0), thickness=2)
 
-        # Uncomment this to show the face rectangles.
-        drawFaceRectangles(frame)
+        if detected_faces:
+            print(' face detected from image')
+            # Uncomment this to show the face rectangles.
+            drawFaceRectangles(frame)
         return frame
