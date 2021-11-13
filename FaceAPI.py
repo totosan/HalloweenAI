@@ -60,7 +60,8 @@ class FaceDetection():
                 frame = cv2.rectangle(frame, start,end, (255, 0 , 0), thickness=2)
 
         if detected_faces:
-            print(' face detected from image')
+            print(f' faces detected from image: {len(detected_faces)}')
             # Uncomment this to show the face rectangles.
-            drawFaceRectangles(frame)
-        return frame
+            # drawFaceRectangles(frame)
+            
+        return detected_faces
