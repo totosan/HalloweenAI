@@ -1,19 +1,14 @@
 # import required libraries
 from logging import currentframe
 import multiprocessing
-from multiprocessing import Queue
-from multiprocessing import pool
 from multiprocessing.context import Process
 import os
-from time import sleep, time, perf_counter
+from time import sleep
 from azure.cognitiveservices.vision import face
 import cv2
-import mpipe
 import coils
-from numpy import true_divide
 
 from vidgear.gears import VideoGear
-from FaceAPI import FaceDetection
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
@@ -21,20 +16,20 @@ PROCESS_NUM = 2
 shared = multiprocessing.Manager().dict()
 processMem = multiprocessing.Manager().Value('b',False)
 
-class gearIt():
+class VideoProcessor():
 
-    def __init__(self, ImageServer) -> None:
+    def __init__(self, ImageServer, Detector) -> None:
 
         # open same stream without stabilization for comparison
         self.stream_org = VideoGear(source="video.mp4").start()
         self.frame = None
-        self.detection = FaceDetection()
+        self.detection = Detector
         # Monitor framerates for the given seconds past.
         self.framerate = coils.RateTicker((1, 5, 10))
         self.imageProcessingPipe = None
         self.renderingPipe = None
-        self.inputQ = Queue()
-        self.outputQ = Queue()
+        self.inputQ = multiprocessing.Queue()
+        self.outputQ = multiprocessing.Queue()
         
         # init http stream
         imageServer = ImageServer(8001, self)
@@ -54,7 +49,7 @@ class gearIt():
     @staticmethod
     def drawFaceRectangles(frame, detected_faces):
         for face in detected_faces:
-            start, end = gearIt.getRectangle(face)
+            start, end = VideoProcessor.getRectangle(face)
             frame = cv2.rectangle(frame, start, end, (255, 0, 0), thickness=2)
 
     def get_display_frame(self):
@@ -66,7 +61,7 @@ class gearIt():
                 faces = shared['out']
                 currentFrame = shared['current']
                 if faces:
-                    gearIt.drawFaceRectangles(currentFrame, faces)
+                    VideoProcessor.drawFaceRectangles(currentFrame, faces)
                 frameBytes = cv2.imencode('.jpg', currentFrame)[1].tobytes()
                 return frameBytes
         except Exception as e:
@@ -78,7 +73,7 @@ class gearIt():
             if not self.inputQ.empty() is True:
                 frame = self.inputQ.get_nowait()
                 print(f'ProcessID process: {os.getpid()}')
-                faces = self.detection.detect_faces(frame)
+                faces = self.detection.detect_multi(frame)
                 self.outputQ.put_nowait(faces)
 
     def displayFrameOnServer(self):
@@ -98,7 +93,7 @@ class gearIt():
             frame_org = self.stream_org.read()
 
             # put as input for face detection
-            if frameCnt % 10 == 0 :
+            if frameCnt % 1 == 0 :
                 self.inputQ.put_nowait(frame_org)
                 frameCnt = 0
             frameCnt = frameCnt + 1
@@ -116,7 +111,7 @@ class gearIt():
 
     def run(self):
         # run processes for video processing        
-        processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(2)]
+        processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(5)]
         for p in processesProcessing:
             p.start()
             

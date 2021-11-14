@@ -1,10 +1,11 @@
 #!/usr/local/python/bin/python
 
 from Cam.ImageServer import ImageServer
-from Gears.streamAsync import gearIt
-
+from Gears.VideoProcessor import VideoProcessor
+from Tracking.FaceAPI import FaceDetection
 def run():
-    gear = gearIt(ImageServer)
+    detector = FaceDetection()
+    gear = VideoProcessor(ImageServer, detector)
     gear.run()
 
 if __name__=="__main__":

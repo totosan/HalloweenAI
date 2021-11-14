@@ -18,20 +18,22 @@ from azure.cognitiveservices.vision.face import FaceClient
 from msrest.authentication import CognitiveServicesCredentials
 from azure.cognitiveservices.vision.face.models import TrainingStatusType, Person
 
+from Tracking.DetectionBase import DetectionBase
+
 # This key will serve all examples in this document.
 KEY = os.getenv("FACE_API_KEY")
 
 # This endpoint will be used in all examples in this quickstart.
 ENDPOINT = os.getenv("FACE_API_ENDPOINT")
 
-class FaceDetection():
+class FaceDetection(DetectionBase):
     def __init__(self) -> None:   
         # Create an authenticated FaceClient.
         self.face_client = FaceClient(ENDPOINT, CognitiveServicesCredentials(KEY))
         self.samplenum = 0
 
         
-    def detect_faces(self, frame):
+    def detect_multi(self, frame):
         # We use detection model 3 to get better performance.
         self.samplenum=self.samplenum+1
         imageName = 'temp.jpg'
