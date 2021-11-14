@@ -8,3 +8,5 @@ urllib3==1.24.1
 azure-cognitiveservices-vision-face==0.5.0
 Pillow
 youtube-dl
+scipy
+imutils
