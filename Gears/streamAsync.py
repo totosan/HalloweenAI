@@ -1,13 +1,16 @@
 # import required libraries
 from logging import currentframe
 import multiprocessing
-from multiprocessing import queues
+from multiprocessing import Queue
+from multiprocessing import pool
+from multiprocessing.context import Process
 import os
 from time import sleep, time, perf_counter
 from azure.cognitiveservices.vision import face
 import cv2
 import mpipe
 import coils
+from numpy import true_divide
 
 from vidgear.gears import VideoGear
 from FaceAPI import FaceDetection
@@ -16,21 +19,23 @@ from FaceAPI import FaceDetection
 
 PROCESS_NUM = 2
 shared = multiprocessing.Manager().dict()
+processMem = multiprocessing.Manager().Value('b',False)
 
 class gearIt():
-    
+
     def __init__(self, ImageServer) -> None:
-            
+
         # open same stream without stabilization for comparison
         self.stream_org = VideoGear(source="video.mp4").start()
         self.frame = None
         self.detection = FaceDetection()
         # Monitor framerates for the given seconds past.
-        self.framerate = coils.RateTicker((1,5,10))
+        self.framerate = coils.RateTicker((1, 5, 10))
         self.imageProcessingPipe = None
         self.renderingPipe = None
-
-
+        self.inputQ = Queue()
+        self.outputQ = Queue()
+        
         # init http stream
         imageServer = ImageServer(8001, self)
         imageServer.start()
@@ -43,86 +48,90 @@ class gearIt():
         top = rect.top
         right = left + rect.width
         bottom = top + rect.height
-        
+
         return ((left, top), (right, bottom))
-    
+
     @staticmethod
-    def drawFaceRectangles(frame, detected_faces) :
+    def drawFaceRectangles(frame, detected_faces):
         for face in detected_faces:
             start, end = gearIt.getRectangle(face)
-            frame = cv2.rectangle(frame, start,end, (255, 0 , 0), thickness=2)
+            frame = cv2.rectangle(frame, start, end, (255, 0, 0), thickness=2)
 
     def get_display_frame(self):
-        faces = shared['out']
-        currentFrame = shared['current']
-        if faces:
-            gearIt.drawFaceRectangles(currentFrame, faces)
-        frameBytes = cv2.imencode('.jpg',currentFrame)[1].tobytes()
-        return frameBytes
-        
-    def processFrame(self, frame):
-        print(f'ProcessID process: {os.getpid()}')
-        #sleep(0.6)
+        global shared
+        global processMem
         faces = None
-        faces = self.detection.detect_faces(frame)
-        return faces
-    
-    def displayFrameOnServer(self, value):
-        global forServerFrame
-        
-        while True:
-            print(f'ProcessID grab: {os.getpid()}')
-            faces = self.imageProcessingPipe.get()
-            fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
-            print(fps_text, len(faces))
-            shared['out']  = faces
+        try:
+            if processMem.value == False:
+                faces = shared['out']
+                currentFrame = shared['current']
+                if faces:
+                    gearIt.drawFaceRectangles(currentFrame, faces)
+                frameBytes = cv2.imencode('.jpg', currentFrame)[1].tobytes()
+                return frameBytes
+        except Exception as e:
+            print("Exception on serving frames")
 
-    def generateFrames(self,value):
+    def processFrame(self):
+        global processMem
+        while processMem.value == False:
+            if not self.inputQ.empty() is True:
+                frame = self.inputQ.get_nowait()
+                print(f'ProcessID process: {os.getpid()}')
+                faces = self.detection.detect_faces(frame)
+                self.outputQ.put_nowait(faces)
+
+    def displayFrameOnServer(self):
+        global shared
+        global processMem
+        while processMem.value == False:
+            if not self.outputQ.empty() is True:
+                faces = self.outputQ.get_nowait()
+                print(f'ProcessID grab: {os.getpid()}')
+                shared['out'] = faces
+
+    def generateFrames(self):
+        global shared
+        frameCnt = 0
         while True:
-            print(f'ProcessID generate: {os.getpid()}')
-        
-            tic = perf_counter()
             # read un-stabilized frame
             frame_org = self.stream_org.read()
-            self.imageProcessingPipe.put(frame_org)
-            toc = perf_counter()
-            print(f'Time to put into processing pipe {toc-tic:0.4f}s')
+
+            # put as input for face detection
+            if frameCnt % 10 == 0 :
+                self.inputQ.put_nowait(frame_org)
+                frameCnt = 0
+            frameCnt = frameCnt + 1
+
+            fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
+            print(fps_text)
+            fps_current = self.framerate.tick()[0]
+            wait_time = 0.001
+            if fps_current>26.0:
+                wait_time=1/(fps_current-25.0)
+            
+            sleep(wait_time)
+            # make current frame for anything available in shared memory
             shared['current'] = frame_org
 
     def run(self):
-        # processing frames
-        stageProcessFrame =  mpipe.OrderedStage(self.processFrame)
-        #stageProcessFrame = mpipe.FilterStage(( mpipe.UnorderedStage(self.processFrame),),max_tasks=4)
-        self.imageProcessingPipe = mpipe.Pipeline(stageProcessFrame)
-                
-        #distributing frames
-        stageDisplay = mpipe.UnorderedStage(self.displayFrameOnServer)
-        self.renderingPipe = mpipe.Pipeline(stageDisplay)
-        self.renderingPipe.put(True)
-    
-        stageGenerate = mpipe.UnorderedStage(self.generateFrames)
-        pipe = mpipe.Pipeline(stageGenerate)
-        pipe.put(True)
+        # run processes for video processing        
+        processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(2)]
+        for p in processesProcessing:
+            p.start()
+            
+        procRender = Process(target=self.displayFrameOnServer, daemon=True)
+        procRender.start()
         
-        try: 
-            while True:
-                sleep(0.01)
+        try:
+            self.generateFrames()
 
-            if False:
-                # loop over
-                while True:
-                    print(f'ProcessID Main: {os.getpid()}')
-                    
-                    # read un-stabilized frame
-                    frame_org = self.stream_org.read()
-                    self.imageProcessingPipe.put(frame_org)
-                    shared['current'] = frame_org
-                
-        except KeyboardInterrupt as e :
-            print(e)
+        except KeyboardInterrupt as e:
+            print("STRG+C pressed")
+            processMem.set(True)
+            procRender.terminate()
+            for p in processesProcessing:
+                p.terminate()
         finally:
             print("Stoppig pipeline")
-            # safely close both video streams
-            self.imageProcessingPipe.put(None)
-            #self.renderingPipe.put(None)
             self.stream_org.stop()
