@@ -4,11 +4,11 @@ import multiprocessing
 from multiprocessing.context import Process
 import os
 from time import sleep
-from azure.cognitiveservices.vision import face
 import cv2
 import coils
-
 from vidgear.gears import VideoGear
+from azure.cognitiveservices.vision import face
+from Tracking.centroidtracker import CentroidTracker
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
@@ -22,35 +22,22 @@ class VideoProcessor():
 
         # open same stream without stabilization for comparison
         self.stream_org = VideoGear(source="video.mp4").start()
-        self.frame = None
         self.detection = Detector
+        self.tracker = CentroidTracker()
+        prototxt = "./Tracking/dnn/face_detector/deploy.prototxt"
+        weights = "./Tracking/dnn/face_detector/weights.meta4"
+        net = cv2.dnn.readNetFromCaffe(prototxt, weights)
+        
         # Monitor framerates for the given seconds past.
         self.framerate = coils.RateTicker((1, 5, 10))
-        self.imageProcessingPipe = None
-        self.renderingPipe = None
+        self.frame = None
+
         self.inputQ = multiprocessing.Queue()
         self.outputQ = multiprocessing.Queue()
         
         # init http stream
         imageServer = ImageServer(8001, self)
         imageServer.start()
-
-    # Convert width height to a point in a rectangle
-    @staticmethod
-    def getRectangle(faceDictionary):
-        rect = faceDictionary.face_rectangle
-        left = rect.left
-        top = rect.top
-        right = left + rect.width
-        bottom = top + rect.height
-
-        return ((left, top), (right, bottom))
-
-    @staticmethod
-    def drawFaceRectangles(frame, detected_faces):
-        for face in detected_faces:
-            start, end = VideoProcessor.getRectangle(face)
-            frame = cv2.rectangle(frame, start, end, (255, 0, 0), thickness=2)
 
     def get_display_frame(self):
         global shared
@@ -73,8 +60,8 @@ class VideoProcessor():
             if not self.inputQ.empty() is True:
                 frame = self.inputQ.get_nowait()
                 print(f'ProcessID process: {os.getpid()}')
-                faces = self.detection.detect_multi(frame)
-                self.outputQ.put_nowait(faces)
+                objOfInterest = None
+                self.outputQ.put_nowait(objOfInterest)
 
     def displayFrameOnServer(self):
         global shared
