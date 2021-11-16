@@ -56,15 +56,18 @@ class VideoProcessor():
         shared['processStop'] = False
 
     def processFrame(self):
-        global processMem
+        global shared
         while shared['processStop'] == False:
             if not self.inputQ.empty() is True:
                 frame = self.inputQ.get_nowait()
+                
+                # do detection part here
                 detections = self.detection.detect_multi(frame)
+                
                 objOfInterest = detections
                 self.outputQ.put_nowait(objOfInterest)
 
-    async def displayFrameOnServer(self, frame):
+    def displayFrameOnServer(self, frame):
         if not self.outputQ.empty() is True:
             faces = self.outputQ.get_nowait()
             if faces.any():
@@ -79,7 +82,7 @@ class VideoProcessor():
             frame_org = self.stream_org.read()
 
             # put as input for face detection
-            if frameCnt % 5 == 0 :
+            if frameCnt % 10 == 0 and self.inputQ.qsize() < 10:
                 self.inputQ.put_nowait(frame_org)
                 frameCnt = 0
             frameCnt = frameCnt + 1
@@ -87,7 +90,11 @@ class VideoProcessor():
             fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
             cv2.putText(frame_org, fps_text, (20, 40),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
 
-            frame = await self.displayFrameOnServer(frame_org)
+            frame = self.displayFrameOnServer(frame_org)
+            
+            print(f'InQ: {self.inputQ.qsize()}')
+            print(f'OutQ: {self.outputQ.qsize()}')
+
             # reducer frames size if you want more performance otherwise comment this line
             frame = await reducer(frame, percentage=30)  # reduce frame by 30%
             # handle JPEG encoding
@@ -99,7 +106,7 @@ class VideoProcessor():
 
     def run(self):
         # run processes for video processing        
-        processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(1)]
+        processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(2)]
         for p in processesProcessing:
             p.start()
         
