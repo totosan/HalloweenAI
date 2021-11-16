@@ -2,9 +2,9 @@
 
 from Cam.ImageServer import ImageServer
 from Gears.VideoProcessor import VideoProcessor
-from Tracking.FaceAPI import FaceDetection
+from Tracking.FaceDetector_cv2 import FaceDetectorDnn
 def run():
-    detector = FaceDetection()
+    detector = FaceDetectorDnn()
     gear = VideoProcessor(ImageServer, detector)
     gear.run()
 

@@ -12,8 +12,7 @@ from vidgear.gears.asyncio import WebGear
 from vidgear.gears.asyncio.helper import reducer
 from starlette.responses import StreamingResponse
 from starlette.routing import Route
-
-from FaceAPI import FaceDetection
+from Tracking.FaceAPI import FaceDetection
 
 class gearIt(object):
     def __init__(self, *args):
