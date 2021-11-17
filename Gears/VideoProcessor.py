@@ -55,6 +55,27 @@ class VideoProcessor():
         self.outputQ = multiprocessing.Queue()
         shared['processStop'] = False
 
+    def run(self):
+        # run processes for video processing        
+        processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(2)]
+        for p in processesProcessing:
+            p.start()
+        
+        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8081)
+
+        # close app safely
+        self.web_stream.shutdown()
+        
+        print("Stopping processes")
+        shared['processStop'] = True
+        self.stream_org.stop()
+        self.inputQ.close()
+        self.outputQ.close()
+        # terminating all processes
+        for p in processesProcessing:
+            p.terminate()
+
+            
     def processFrame(self):
         global shared
         while shared['processStop'] == False:
@@ -82,7 +103,7 @@ class VideoProcessor():
             frame_org = self.stream_org.read()
 
             # put as input for face detection
-            if frameCnt % 10 == 0 and self.inputQ.qsize() < 10:
+            if frameCnt % 5 == 0 and self.inputQ.qsize() < 10:
                 self.inputQ.put_nowait(frame_org)
                 frameCnt = 0
             frameCnt = frameCnt + 1
@@ -103,24 +124,3 @@ class VideoProcessor():
             # yield frame in byte format
             yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
             await asyncio.sleep(0.00001)  
-
-    def run(self):
-        # run processes for video processing        
-        processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(2)]
-        for p in processesProcessing:
-            p.start()
-        
-        # run this app on Uvicorn server at address http://localhost:8000/
-        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8081)
-
-        # close app safely
-        self.web_stream.shutdown()
-        
-        print("Stopping processes")
-        shared['processStop'] = True
-        self.stream_org.stop()
-        self.inputQ.close()
-        self.outputQ.close()
-        # terminating all processes
-        for p in processesProcessing:
-            p.terminate()

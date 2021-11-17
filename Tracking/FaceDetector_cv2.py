@@ -15,7 +15,7 @@ class FaceDetectorDnn(DetectionBase):
     def detect_multi(self, frame):
         frame = imutils.resize(frame, width=400)
         
-        blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0,(300, 300), (104.0, 177.0, 123.0))
+        blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0,(300, 300), (104.0, 117.0, 123.0))
         self.net.setInput(blob)
         detections = self.net.forward()
         return detections

@@ -13,3 +13,6 @@ scipy
 imutils
 coils
 vidgear
+starlette
+uvicorn
+jinja2
