@@ -24,19 +24,24 @@ PROCESS_NUM = 2
 shared = multiprocessing.Manager().dict()
 
 class VideoProcessor():
-
+    
     def __init__(self, ImageServer, Detector) -> None:
         video_source = os.getenv("VIDEO_PATH","video.mp4")
-        print(f'Video source is {video_source}')
         streamMode = True if "youtu" in video_source else False
 
         # various performance tweaks
         self.options = {
             "custom_data_location":"./",
-            #"frame_size_reduction": 25,
+            "frame_size_reduction": 50,
             "enable_live_braodcast":True,
         }   
         # open same stream without stabilization for comparison
+        print("**************************")
+        print(f'* Video: {video_source}')
+        print(f'* Streaming: {streamMode}')
+        print(f'* Config: {self.options}')
+        print("**************************")
+
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=30).start()
         self.web_stream = WebGear(logging=True, **self.options)
 
@@ -45,7 +50,7 @@ class VideoProcessor():
 
         self.detection = DetectionBase()
         self.detection = Detector
-        self.tracker = CentroidTracker()
+        self.tracker = CentroidTracker(maxDisappeared=10, maxDistance=20)
         
         # Monitor framerates for the given seconds past.
         self.framerate = coils.RateTicker((1, 5, 10))
@@ -83,17 +88,30 @@ class VideoProcessor():
                 frame = self.inputQ.get_nowait()
                 
                 # do detection part here
-                detections = self.detection.detect_multi(frame)
-                
+                detections = self.detection.detect_multi(frame)                
                 objOfInterest = detections
                 self.outputQ.put_nowait(objOfInterest)
 
-    def displayFrameOnServer(self, frame):
+    def addFacesIfExists(self, frame):
         if not self.outputQ.empty() is True:
             faces = self.outputQ.get_nowait()
+
             if faces.any():
-                frame = self.detection.render(faces,frame)               
-        return frame              
+                detectionsRects = []
+                frame, detectionsRects = self.detection.render(faces,frame)
+                
+                objects = self.tracker.update(detectionsRects)
+                for (objId, centroidObject) in objects.items():
+                    text = "ID {}".format(objId)
+                    centroid = centroidObject.center
+                    className = centroidObject.class_type
+                    faceRect = centroidObject.rect
+
+                    cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    cv2.circle(frame, (centroid[0], centroid[1]), 4, (10*objId, 255, 0), -1)
+ 
+        
+        return frame       
 
     async def generateFrames(self):
         global shared
@@ -103,7 +121,7 @@ class VideoProcessor():
             frame_org = self.stream_org.read()
 
             # put as input for face detection
-            if frameCnt % 5 == 0 and self.inputQ.qsize() < 10:
+            if frameCnt % 7 == 0 and self.inputQ.qsize() < 10:
                 self.inputQ.put_nowait(frame_org)
                 frameCnt = 0
             frameCnt = frameCnt + 1
@@ -111,7 +129,7 @@ class VideoProcessor():
             fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
             cv2.putText(frame_org, fps_text, (20, 40),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
 
-            frame = self.displayFrameOnServer(frame_org)
+            frame = self.addFacesIfExists(frame_org)
             
             print(f'InQ: {self.inputQ.qsize()}')
             print(f'OutQ: {self.outputQ.qsize()}')

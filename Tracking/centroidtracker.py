@@ -2,6 +2,7 @@
 from scipy.spatial import distance as dist
 from collections import OrderedDict
 import numpy as np
+from Tracking.CentroidItem import CentroidItem
 
 class CentroidTracker:
 	def __init__(self, maxDisappeared=100, maxDistance=50):
@@ -26,7 +27,7 @@ class CentroidTracker:
 	def register(self, centroid, objectType, rect):
 		# when registering an object we use the next available object
 		# ID to store the centroid
-		self.objects[self.nextObjectID] = (centroid, objectType, rect)
+		self.objects[self.nextObjectID] = CentroidItem(center=centroid, class_type=objectType, rect=rect)
 		self.disappeared[self.nextObjectID] = 0
 		self.nextObjectID += 1
 
@@ -78,7 +79,7 @@ class CentroidTracker:
 			else:
 				# grab the set of object IDs and corresponding centroids
 				objectIDs = list(self.objects.keys())
-				objectCentroids = list([i[0] for i in self.objects.values()])
+				objectCentroids = list([i.center for i in self.objects.values()])
 				
 				# compute the distance between each pair of object
 				# centroids and input centroids, respectively -- our
@@ -122,7 +123,7 @@ class CentroidTracker:
 					# set its new centroid, and reset the disappeared
 					# counter
 					objectID = objectIDs[row]
-					self.objects[objectID] = (inputCentroids[col],self.objects[objectID][1], rectContainer[col].rect)
+					self.objects[objectID] = CentroidItem(center=inputCentroids[col],class_type=self.objects[objectID].class_type, rect=rectContainer[col].rect)
 					self.disappeared[objectID] = 0
 
 					# indicate that we have examined each of the row and
