@@ -24,6 +24,7 @@ import uvicorn, asyncio, cv2
 
 from Tracking.DetectionBase import DetectionBase
 from Tracking.centroidtracker import CentroidTracker
+from Tracking.gfx.DetectionHelper import DetectionHelper
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
@@ -57,8 +58,8 @@ class VideoProcessor():
         # add your custom frame producer to config
         self.web_stream.config["generator"] = self.generateFrames
 
-        self.detection = DetectionBase()
-        self.detection = Detector
+        self.detector = DetectionBase()
+        self.detector = Detector
         self.centroids = CentroidTracker(maxDisappeared=10, maxDistance=50)
         self.faceTrackers = [] # dlib tracking initialization
         self.trackableIDs = {}
@@ -102,7 +103,7 @@ class VideoProcessor():
             if not self.inputQ.empty() is True:
                 frame = self.inputQ.get_nowait()
                 # do detection part here
-                detections = self.detection.detect_multi(frame)                
+                detections = self.detector.detect_multi(frame)                
                 objOfInterest = detections
                 if detections.any():
                     self.outputQ.put_nowait(objOfInterest)
@@ -113,52 +114,25 @@ class VideoProcessor():
         detectedFacesRects = []
         if not self.outputQ.empty() is True:
             faces = self.outputQ.get_nowait()
-            detectedFacesRects = self.detection.getDetectionRects(faces,frame)
-
             self.faceTrackers.clear()
-            for i,faceRect in enumerate(detectedFacesRects):
-                (startX, startY, endX, endY) = faceRect.astype("int")
-                detectedFacesRects[i] =[int(coord) for coord in faceRect]
-                dlibCorrelationTracker = dlib.correlation_tracker()
-                correlationRect = dlib.rectangle(startX, startY, endX, endY)
-                dlibCorrelationTracker.start_track(rgb,correlationRect)
-                self.faceTrackers.append(dlibCorrelationTracker)
-        else:
-            for tracker in self.faceTrackers:
-                tracker.update(rgb)
-                pos = tracker.get_position()
-                # unpack the position object
-                startX = int(pos.left())
-                startY = int(pos.top())
-                endX = int(pos.right())
-                endY = int(pos.bottom())
 
-                detectedFacesRects.append((startX, startY, endX, endY))
+            detectedFacesRects = DetectionHelper.getBoundingBoxesFromDetections(faces,frame)
+            self.faceTrackers = DetectionHelper.createTrackers(detectedFacesRects,rgb)
+        else :
+            detectedFacesRects = DetectionHelper.updateTrackers(self.faceTrackers,rgb)
 
-        print(f'detectedFaces: {detectedFacesRects}')
         centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
         trackedIDs = self.centroids.update(centroidItems)
 
         for (objId, centroidObject) in trackedIDs.items():
-            print(f'No. of trackedIds {len(trackedIDs)}')
-            id_to_track = self.trackableIDs.get(objId, None)
-            if id_to_track == None:
-                id_to_track = TrackableObject(objId,0,centroidObject)
-            else:
-                id_to_track.centroids.append(centroidObject)
-            print(f'id: {objId} history len: {len(id_to_track.centroids)}')
-            #self.trackableIDs[objId] = id_to_track
+            trackedObj = self.trackableIDs.get(objId,None)
+            trackedObj = DetectionHelper.historizeCentroid(trackedObj, objId,centroidObject,50)
+            self.trackableIDs[objId] = trackedObj
 
             text = "ID {}".format(objId)
-            (centroidX,centroidY) = centroidObject.center
-            (startX, startY, endX, endY) = centroidObject.rect
-
-            cv2.putText(frame, text, (centroidX - 10, centroidY - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.circle(frame, (centroidX, centroidY), 4, (10*objId, 255, 0), -1)
-            # draw the bounding box of the face along with the associated
-            y = startY - 10 if startY - 10 > 10 else startY + 10
-            cv2.rectangle(frame, (startX, startY), (endX, endY),(0, 0, 255), 2)
-            cv2.putText(frame, text, (startX, y),cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+            DetectionHelper.drawCentroid(frame,centroidObject.center,str(len(self.trackableIDs[objId].centroids)))
+            DetectionHelper.drawBoundingBoxes(frame,centroidObject.rect, text)
+            DetectionHelper.drawMovementArrow(frame,trackedObj,centroidObject.center)
 
         print(f'No. of trackedFaces: {len(self.faceTrackers)}')
         return frame       
