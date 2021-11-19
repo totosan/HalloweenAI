@@ -1,5 +1,7 @@
 # Base on work from https://github.com/Bronkoknorb/PyImageStream
 import asyncio
+import numpy as np
+from numpy import byte
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -25,9 +27,11 @@ class ImageStreamHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, msg):
         if msg == 'next':
             frame = self.videoCapture.get_display_frame()
-            if frame != None:
-                encoded = base64.b64encode(frame)
-                self.write_message(encoded, binary=False)
+            if frame == None:
+                frame = np.zeros((480,640,3),np.uint8)
+            encoded = base64.b64encode(frame)
+            self.write_message(encoded, binary=False)
+
         else:
             self.mouseEventData = json.loads(msg)
             self.videoCapture.Mouse = self.mouseEventData

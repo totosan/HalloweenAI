@@ -42,6 +42,7 @@ class VideoCapture(object):
             detectionSampleRate = 10,
             imageProcessingEndpoint="",
                injectedAnalyzer = None,
+               callbackForFrames = None,
       ):
 
         self.config = self.GetConfig()
@@ -69,6 +70,7 @@ class VideoCapture(object):
         self.Mouse = None
         self.Drawer = []
         self.ORB = cv2.ORB_create()
+        self.callback = callbackForFrames
         
         if 'orb' in self.features:
             self.refImage = cv2.imread('Cam/testimage.jpg',0)
@@ -424,7 +426,8 @@ class VideoCapture(object):
             ########
             
             if (timeElapsedInMs % 5) < 1.0:
-                frame = self.analyzer.detect_faces(frame)
+                #frame = self.analyzer.detect_faces(frame)
+                frame = self.callback(frame)
    
             if 'orb' in self.features:
                 frame = self.GetCorrespondingFeatures(frame)

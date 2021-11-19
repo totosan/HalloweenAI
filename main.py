@@ -51,7 +51,8 @@ def main(
                         videoHeight,
                         fontScale,
                         imageProcessingEndpoint,
-                        injectedAnalyzer=injectedAnalyzer) as videoCapture:
+                        injectedAnalyzer=injectedAnalyzer,
+                        callbackForFrames=injectedAnalyzer.detect_faces) as videoCapture:
         print(f'Analyzer: {injectedAnalyzer}')
         videoCapture.start()
 
