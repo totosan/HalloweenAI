@@ -7,7 +7,3 @@ class DetectionBase(object):
     
     def detect_multi(self, frame):
         return frame
-
-    def getDetectionRects(self,detections,frame):
-        rects = []
-        return rects

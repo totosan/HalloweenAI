@@ -23,20 +23,3 @@ class FaceDetectorDnn(DetectionBase):
 
     def detect_single(self, frame):
         return super().detect_single(frame)
-
-    def getDetectionRects(self, detections, frame):
-        (h, w) = frame.shape[:2]
-        rects = []
-        for i in range(0, detections.shape[2]):
-            # extract the confidence (i.e., probability) associated with the
-            # prediction
-            confidence = detections[0, 0, i, 2]
-            # filter out weak detections by ensuring the `confidence` is
-            # greater than the minimum confidence
-            if confidence < CONFIDENCE:
-                continue
-            # compute the (x, y)-coordinates of the bounding box for the
-            # object
-            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-            rects.append(box)
-        return rects
