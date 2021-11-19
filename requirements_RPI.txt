@@ -16,3 +16,5 @@ vidgear
 starlette
 uvicorn
 jinja2
+dlib
+pipe

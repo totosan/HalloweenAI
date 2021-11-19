@@ -39,7 +39,7 @@ class FaceDetectorDnn(DetectionBase):
             # object
             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
             item = CentroidItem(0,None,box.astype("int"))
-            rects.append(item)
+            rects.append(box)
             (startX, startY, endX, endY) = box.astype("int")
     
             # draw the bounding box of the face along with the associated

@@ -5,19 +5,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Remote Attach",
+      "name": "Python: Current File",
       "type": "python",
-      "request": "attach",
-      "connect": {
-        "host": "0.0.0.0",
-        "port": 5678
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}",
-          "remoteRoot": "."
-        }
-      ]
+      "request": "launch",
+      "program": "./main_gears.py",
+      "console": "integratedTerminal"
     }
   ]
 }
