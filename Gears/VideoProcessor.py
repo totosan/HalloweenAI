@@ -113,11 +113,12 @@ class VideoProcessor():
         detectedFacesRects = []
         if not self.outputQ.empty() is True:
             faces = self.outputQ.get_nowait()
-            frame, detectedFacesRects = self.detection.render(faces,frame)
+            detectedFacesRects = self.detection.getDetectionRects(faces,frame)
 
             self.faceTrackers.clear()
-            for faceRect in detectedFacesRects:
+            for i,faceRect in enumerate(detectedFacesRects):
                 (startX, startY, endX, endY) = faceRect.astype("int")
+                detectedFacesRects[i] =[int(coord) for coord in faceRect]
                 dlibCorrelationTracker = dlib.correlation_tracker()
                 correlationRect = dlib.rectangle(startX, startY, endX, endY)
                 dlibCorrelationTracker.start_track(rgb,correlationRect)
@@ -149,12 +150,16 @@ class VideoProcessor():
             #self.trackableIDs[objId] = id_to_track
 
             text = "ID {}".format(objId)
-            centroid = centroidObject.center
-            className = centroidObject.class_type
-            faceRect = centroidObject.rect
+            (centroidX,centroidY) = centroidObject.center
+            (startX, startY, endX, endY) = centroidObject.rect
 
-            cv2.putText(frame, text, (centroid[0] - 10, centroid[1] - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.circle(frame, (centroid[0], centroid[1]), 4, (10*objId, 255, 0), -1)
+            cv2.putText(frame, text, (centroidX - 10, centroidY - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.circle(frame, (centroidX, centroidY), 4, (10*objId, 255, 0), -1)
+            # draw the bounding box of the face along with the associated
+            y = startY - 10 if startY - 10 > 10 else startY + 10
+            cv2.rectangle(frame, (startX, startY), (endX, endY),(0, 0, 255), 2)
+            cv2.putText(frame, text, (startX, y),cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+
         print(f'No. of trackedFaces: {len(self.faceTrackers)}')
         return frame       
 
