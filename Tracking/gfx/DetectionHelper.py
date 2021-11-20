@@ -7,7 +7,7 @@ from Tracking.trackableobject import TrackableObject
 
 class DetectionHelper():
     @staticmethod
-    def getBoundingBoxesFromDetections(detections, frame, confidenceThreshold=0.3):
+    def getBoundingBoxesFromDetections(detections, frame, confidenceThreshold=0.5):
         (h, w) = frame.shape[:2]
         rects = []
         for i in range(0, detections.shape[2]):
@@ -72,14 +72,13 @@ class DetectionHelper():
             id_to_track = TrackableObject(objId,0,centroidObject)
         else:
             id_to_track.centroids.append(centroidObject)
-        if historyLimit>0 and len(id_to_track.centroids)==historyLimit:
-            del id_to_track.centroids[-1]
+        if historyLimit > 0 and len(id_to_track.centroids) >= historyLimit:
+            id_to_track.centroids = id_to_track.centroids[:-39]
 
         return id_to_track
     
     @staticmethod
     def drawMovementArrow(frame, trackedObj, currentCentroid):
-        
         y = [c.center[1] for c in trackedObj.centroids]
         x = [c.center[0] for c in trackedObj.centroids]
         (centerX, centerY) = currentCentroid
