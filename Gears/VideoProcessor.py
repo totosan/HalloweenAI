@@ -2,6 +2,7 @@
 from logging import currentframe
 import multiprocessing
 from multiprocessing.context import Process
+from multiprocessing.queues import Queue
 import os
 from time import sleep
 from azure.cognitiveservices.vision import face
@@ -9,6 +10,7 @@ import cv2
 from numpy import string_
 from Tracking.CentroidItem import CentroidItem
 from Tracking.FaceDetector_cv2 import CONFIDENCE
+from Tracking.TrackingHelper import TrackingHelper
 from Tracking.trackableobject import TrackableObject
 import dlib
 import coils
@@ -63,6 +65,7 @@ class VideoProcessor():
         self.centroids = CentroidTracker(maxDisappeared=10, maxDistance=50)
         self.correlationTrackers = [] # dlib tracking initialization
         self.trackableIDs = {}
+        self.trackingManager = TrackingHelper()
 
         # Monitor framerates for the given seconds past.
         self.framerate = coils.RateTicker((1, 5, 10))
@@ -81,7 +84,7 @@ class VideoProcessor():
         for p in processesProcessing:
             p.start()
         
-        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8081)
+        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8080)
 
         # close app safely
         self.web_stream.shutdown()
@@ -119,10 +122,20 @@ class VideoProcessor():
             self.correlationTrackers.clear()
 
             detectedFacesRects = DetectionHelper.getBoundingBoxesFromDetections(faces,frame)
-            self.correlationTrackers = DetectionHelper.createTrackers(detectedFacesRects,rgb)
+            detectedFacesRects = [val.astype("int") for val in detectedFacesRects]
+            self.trackingManager.startTrackerProcess(detectedFacesRects,None,rgb)
+            #self.correlationTrackers = TrackingHelper.createTrackers(detectedFacesRects,rgb)
         else :
-            detectedFacesRects = DetectionHelper.updateTrackers(self.correlationTrackers,rgb)
+            if len(self.trackingManager.inputQueues):
+                for inputQueue in self.trackingManager.inputQueues:
+                    inputQueue.put(rgb)
+                
+            if len(self.trackingManager.outputQueues):
+                for outQ in self.trackingManager.outputQueues:
+                    detectedFacesRects.append(outQ.get())   
+            #detectedFacesRects = TrackingHelper.updateTrackers(self.correlationTrackers,rgb)
 
+        # add IDs to tracked regions
         centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
         trackedCentroidItems = self.centroids.update(centroidItems)
 

@@ -23,33 +23,6 @@ class DetectionHelper():
             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
             rects.append(box)
         return rects
-
-    @staticmethod
-    def createTrackers(detections, frameRGB):
-        trackers=[]
-        for i,faceRect in enumerate(detections):
-            (startX, startY, endX, endY) = faceRect.astype("int")
-            detections[i] =[int(coord) for coord in faceRect]
-            dlibCorrelationTracker = dlib.correlation_tracker()
-            correlationRect = dlib.rectangle(startX, startY, endX, endY)
-            dlibCorrelationTracker.start_track(frameRGB,correlationRect)
-            trackers.append(dlibCorrelationTracker)
-        return trackers
-
-    @staticmethod
-    def updateTrackers(trackers, frameRGB):
-        detections = []
-        for tracker in trackers:
-            tracker.update(frameRGB)
-            pos = tracker.get_position()
-            # unpack the position object
-            startX = int(pos.left())
-            startY = int(pos.top())
-            endX = int(pos.right())
-            endY = int(pos.bottom())
-
-            detections.append((startX, startY, endX, endY))
-        return detections
     
     @staticmethod
     def drawBoundingBoxes(frame, box, text=None):
