@@ -132,7 +132,8 @@ class VideoProcessor():
                 
             if len(self.trackingManager.outputQueues):
                 for outQ in self.trackingManager.outputQueues:
-                    detectedFacesRects.append(outQ.get())   
+                    if not outQ.empty():
+                        detectedFacesRects.append(outQ.get_nowait())   
             #detectedFacesRects = TrackingHelper.updateTrackers(self.correlationTrackers,rgb)
 
         # add IDs to tracked regions

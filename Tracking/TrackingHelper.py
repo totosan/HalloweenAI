@@ -49,10 +49,10 @@ class TrackingHelper:
     def _trackingProcess(self,box, lable, rgb, inQ, outQ):
         trackers = self.createTrackers((box),rgb)
         while True:
-        
-            rgb = inQ.get()
-            if not rgb is None:
-                regions = self.updateTrackers(trackers,rgb)
-                if len(regions)==1:
-                    outQ.put((lable,regions[0][0]))
+            if not inQ.empty():
+                rgb = inQ.get_nowait()
+                if not rgb is None:
+                    regions = self.updateTrackers(trackers,rgb)
+                    if len(regions)==1:
+                        outQ.put_nowait(regions[0])
                 
