@@ -11,6 +11,7 @@ from numpy import string_
 from Tracking.CentroidItem import CentroidItem
 from Tracking.FaceDetector_cv2 import CONFIDENCE
 from Tracking.TrackingHelper import TrackingHelper
+from Tracking.TrackingHelper_multi import TrackingHelper_multi
 from Tracking.trackableobject import TrackableObject
 import dlib
 import coils
@@ -122,19 +123,10 @@ class VideoProcessor():
             self.correlationTrackers.clear()
 
             detectedFacesRects = DetectionHelper.getBoundingBoxesFromDetections(faces,frame)
-            detectedFacesRects = [val.astype("int") for val in detectedFacesRects]
-            self.trackingManager.startTrackerProcess(detectedFacesRects,None,rgb)
-            #self.correlationTrackers = TrackingHelper.createTrackers(detectedFacesRects,rgb)
+            detectedFacesRects = [val.astype("int") for val in detectedFacesRects] # move to centroidItem.rect
+            self.correlationTrackers = self.trackingManager.createTrackers(detectedFacesRects,rgb)
         else :
-            if len(self.trackingManager.inputQueues):
-                for inputQueue in self.trackingManager.inputQueues:
-                    inputQueue.put(rgb)
-                
-            if len(self.trackingManager.outputQueues):
-                for outQ in self.trackingManager.outputQueues:
-                    if not outQ.empty():
-                        detectedFacesRects.append(outQ.get_nowait())   
-            #detectedFacesRects = TrackingHelper.updateTrackers(self.correlationTrackers,rgb)
+            detectedFacesRects = self.trackingManager.updateTrackers(self.correlationTrackers,rgb)
 
         # add IDs to tracked regions
         centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
