@@ -64,7 +64,7 @@ class VideoProcessor():
         self.detector = DetectionBase()
         self.detector = Detector
         self.centroids = CentroidTracker(maxDisappeared=10, maxDistance=50)
-        self.correlationTrackers = [] # dlib tracking initialization
+        
         self.trackableIDs = {}
         self.trackingManager = TrackingHelper()
 
@@ -120,13 +120,11 @@ class VideoProcessor():
         # create or update face tracker 
         if not self.outputQ.empty() is True:
             faces = self.outputQ.get_nowait()
-            self.correlationTrackers.clear()
-
             detectedFacesRects = DetectionHelper.getBoundingBoxesFromDetections(faces,frame)
             detectedFacesRects = [val.astype("int") for val in detectedFacesRects] # move to centroidItem.rect
-            self.correlationTrackers = self.trackingManager.createTrackers(detectedFacesRects,rgb)
+            self.trackingManager.createTrackers(detectedFacesRects,rgb)
         else :
-            detectedFacesRects = self.trackingManager.updateTrackers(self.correlationTrackers,rgb)
+            detectedFacesRects = self.trackingManager.updateTrackers(rgb)
 
         # add IDs to tracked regions
         centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
@@ -142,7 +140,7 @@ class VideoProcessor():
             DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
             DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
 
-        print(f'No. of trackedFaces: {len(self.correlationTrackers)}')
+        print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
 
     async def generateFrames(self):
