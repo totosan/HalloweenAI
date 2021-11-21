@@ -2,6 +2,7 @@
 from logging import currentframe
 import multiprocessing
 from multiprocessing.context import Process
+from multiprocessing.queues import Queue
 import os
 from time import sleep
 from azure.cognitiveservices.vision import face
@@ -9,6 +10,8 @@ import cv2
 from numpy import string_
 from Tracking.CentroidItem import CentroidItem
 from Tracking.FaceDetector_cv2 import CONFIDENCE
+from Tracking.TrackingHelper import TrackingHelper
+from Tracking.TrackingHelper_multi import TrackingHelper_multi
 from Tracking.trackableobject import TrackableObject
 import dlib
 import coils
@@ -61,8 +64,9 @@ class VideoProcessor():
         self.detector = DetectionBase()
         self.detector = Detector
         self.centroids = CentroidTracker(maxDisappeared=10, maxDistance=50)
-        self.faceTrackers = [] # dlib tracking initialization
+        
         self.trackableIDs = {}
+        self.trackingManager = TrackingHelper()
 
         # Monitor framerates for the given seconds past.
         self.framerate = coils.RateTicker((1, 5, 10))
@@ -81,7 +85,7 @@ class VideoProcessor():
         for p in processesProcessing:
             p.start()
         
-        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8081)
+        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8080)
 
         # close app safely
         self.web_stream.shutdown()
@@ -98,7 +102,7 @@ class VideoProcessor():
             
     def processFrame(self):
         global shared
-        self.faceTrackers = []
+        self.correlationTrackers = []
         while shared['processStop'] == False:
             if not self.inputQ.empty() is True:
                 frame = self.inputQ.get_nowait()
@@ -112,37 +116,37 @@ class VideoProcessor():
     def addFacesIfExists(self, frame):
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         detectedFacesRects = []
+        
+        # create or update face tracker 
         if not self.outputQ.empty() is True:
             faces = self.outputQ.get_nowait()
-            self.faceTrackers.clear()
-
             detectedFacesRects = DetectionHelper.getBoundingBoxesFromDetections(faces,frame)
-            self.faceTrackers = DetectionHelper.createTrackers(detectedFacesRects,rgb)
+            detectedFacesRects = [val.astype("int") for val in detectedFacesRects] # move to centroidItem.rect
+            self.trackingManager.createTrackers(detectedFacesRects,rgb)
         else :
-            detectedFacesRects = DetectionHelper.updateTrackers(self.faceTrackers,rgb)
+            detectedFacesRects = self.trackingManager.updateTrackers(rgb)
 
+        # add IDs to tracked regions
         centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
-        trackedIDs = self.centroids.update(centroidItems)
+        trackedCentroidItems = self.centroids.update(centroidItems)
 
-        for (objId, centroidObject) in trackedIDs.items():
-            trackedObj = self.trackableIDs.get(objId,None)
-            trackedObj = DetectionHelper.historizeCentroid(trackedObj, objId,centroidObject,50)
-            self.trackableIDs[objId] = trackedObj
+        for (objId, centroidItem) in trackedCentroidItems.items():
+            trackedIdObj = self.trackableIDs.get(objId,None)
+            trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
+            self.trackableIDs[objId] = trackedIdObj
 
             text = "ID {}".format(objId)
-            DetectionHelper.drawCentroid(frame,centroidObject.center,str(len(self.trackableIDs[objId].centroids)))
-            DetectionHelper.drawBoundingBoxes(frame,centroidObject.rect, text)
-            DetectionHelper.drawMovementArrow(frame,trackedObj,centroidObject.center)
+            DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
+            DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
+            DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
 
-        print(f'No. of trackedFaces: {len(self.faceTrackers)}')
+        print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
 
     async def generateFrames(self):
         global shared
         frameCnt = 0
         while shared['processStop'] == False:
-            if shared['processStop'] == True:
-                print("STOPPPPPPP: "+shared['processStop'])
             # read un-stabilized frame
             frame_org = self.stream_org.read()
 
