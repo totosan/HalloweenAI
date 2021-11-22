@@ -6,4 +6,5 @@ config.json
 *.deb
 *.jpg
 *.mp4
+.git
 .devcontainer
