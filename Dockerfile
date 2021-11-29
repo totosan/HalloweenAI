@@ -1,23 +1,23 @@
-ARG VIRTUAL_ENV="/opt/venv"
-
-FROM python:3.8-slim as builder
-
-ARG VIRTUAL_ENV
-ARG DEBIAN_FRONTEND=noninteractive
-ENV VIRTUAL_ENV=$VIRTUAL_ENV \
-    PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN apt-get update && apt-get -y upgrade &&\
- apt-get install cmake build-essential --yes &&\
- python3 -m venv $VIRTUAL_ENV 
-
-COPY requirements_RPI.txt ./
-RUN pip install --no-cache-dir -r requirements_RPI.txt
-
-FROM python:3.8-slim
-ARG VIRTUAL_ENV
-COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
-ENV VIRTUAL_ENV=$VIRTUAL_ENV \
-    PATH="$VIRTUAL_ENV/bin:$PATH"
-COPY . /app/
-WORKDIR /app
-CMD [ "python3", "main_gears.py" ]
+FROM balenalib/raspberrypi3-python:latest-bullseye 
+RUN ["cross-build-start"]
+RUN install_packages wget \
+    cmake gfortran \
+    build-essential unzip git \
+    python3-all-dev python3-opencv \
+    libjpeg-dev libtiff-dev libgif-dev \
+    libavcodec-dev libavformat-dev libswscale-dev \
+    libgtk2.0-dev libcanberra-gtk* \
+    libxvidcore-dev libx264-dev libgtk-3-dev \
+    libtbb2 libtbb-dev libdc1394-22-dev libv4l-dev \
+    libopenblas-dev libatlas-base-dev libblas-dev \
+    libjasper-dev liblapack-dev libhdf5-dev \
+    v4l-utils libgoogle-glog-dev libgflags-dev libprotobuf-dev \
+    protobuf-compiler 
+RUN python -m pip install --upgrade pip numpy==1.21.4
+RUN cd /usr/local/lib/python3.10/site-packages/ && \
+    ls -alh &&\
+    ln -s /usr/lib/python3/dist-packages/cv2.cpython-39-arm-linux-gnueabihf.so ./cv2.so
+RUN cd / 
+COPY . .
+RUN pip install -r requirements_RPI.txt
+RUN ["cross-build-end"]
