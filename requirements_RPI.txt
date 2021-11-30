@@ -1,5 +1,5 @@
 # ->Python3.9.4
-opencv-python-headless==4.5.3.56
+opencv-python==4.5.3.56
 asyncio==3.4.3
 netifaces==0.10.9
 numpy
@@ -10,7 +10,7 @@ urllib3==1.24.1
 azure-cognitiveservices-vision-face==0.5.0
 Pillow
 youtube-dl
-scipy
+scipy==1.7.2
 imutils==0.5.4
 coils
 vidgear
