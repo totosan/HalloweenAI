@@ -55,17 +55,19 @@ RUN install_packages \
     git \
     wget \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN pip install wheel && pip wheel dlib
+RUN pip install wheel && pip wheel dlib scipy
 
 RUN [ "cross-build-end" ]
 
 FROM balenalib/armv7hf-ubuntu-python:3.9-bionic-run
-COPY --from=build2 /code/opencv-python/*.whl .
-COPY --from=build2 /usr/lib/arm-linux-gnueabihf/ /usr/lib/
+COPY --from=opencv_numpy /code/opencv-python/*.whl .
+COPY --from=opencv_numpy /usr/lib/arm-linux-gnueabihf/ /usr/lib/
 COPY --from=dlib *.whl .
 COPY . .
+RUN [ "cross-build-start" ]
 #RUN apt install libjpeg62 libatlas3-base libbsd0
 RUN /usr/local/bin/python3.9 -m pip install --upgrade pip
 RUN for wheel in *.whl; do pip install $wheel; done 
 RUN pip install  --no-cache-dir --find-links . -r requirements_RPI.txt --extra-index-url https://www.piwheels.org/simple --no-deps
+RUN pip install --no-cache-dir --find-links . scipy
 RUN ["cross-build-end"]
