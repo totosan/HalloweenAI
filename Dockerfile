@@ -47,6 +47,7 @@ FROM balenalib/armv7hf-ubuntu-python:3.9-bionic-build as dlib
 #Enforces cross-compilation through Qemu
 RUN [ "cross-build-start" ]
 
+COPY --from=opencv_numpy /code/opencv-python/*numpy*.whl .
 RUN install_packages \
     sudo \
     build-essential \
@@ -55,7 +56,7 @@ RUN install_packages \
     git \
     wget \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-RUN pip install wheel && pip wheel dlib scipy
+RUN pip install wheel $(ls numpy*) && pip wheel dlib scipy
 
 RUN [ "cross-build-end" ]
 
