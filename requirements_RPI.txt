@@ -13,7 +13,7 @@ youtube-dl
 scipy==1.7.2
 imutils==0.5.4
 coils
-vidgear
+vidgear==0.2.4
 starlette
 uvicorn
 jinja2
