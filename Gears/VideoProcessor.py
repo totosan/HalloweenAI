@@ -5,7 +5,6 @@ from multiprocessing.context import Process
 from multiprocessing.queues import Queue
 import os
 from time import sleep
-from azure.cognitiveservices.vision import face
 import cv2
 from numpy import string_
 from Tracking.CentroidItem import CentroidItem
