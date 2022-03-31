@@ -9,7 +9,7 @@ on:
 env:
   DOCKER_REPO: totosan
   VIDEO_PATH: https://youtu.be/G1VvHZ25j_k
-  ARCH: amd64
+  ARCH: "amd64"
   
 jobs:
 
