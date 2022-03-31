@@ -53,8 +53,8 @@ jobs:
 
     steps:
     - name: prepare AZ EXTENSION
-      run: az extension add --source https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.0-py2.py3-none-any.whl --yes
-
+      run: az extension add --name containerapp
+      
     - name: create container app environment
       if: ${{ env.ARCH == 'amd64' }}
       run: |
