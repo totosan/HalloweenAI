@@ -21,7 +21,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Login to docker.io
-      run: docker login -u $DOCKER_USER -p $DOCKER_PWD
+      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
     - name: Build the Docker image
       run: |
         docker build . --file ./Dockers/Dockerfile-$ARCH \
