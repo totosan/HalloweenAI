@@ -9,14 +9,13 @@ on:
 env:
   DOCKER_REPO: totosan
   VIDEO_PATH: https://youtu.be/G1VvHZ25j_k
+  ARCH: amd64
   
 jobs:
 
   build-container:
     
     runs-on: ubuntu-latest
-    env:
-      ARCH: arm64
       
     steps:
     - uses: actions/checkout@v3
@@ -43,6 +42,7 @@ jobs:
       run: docker push ${DOCKER_REPO}/facedetection:$ARCH-${{ steps.date.outputs.date }}
   
   deployToACA:
+    if: ${{ env.ARCH == 'AMD64' }}
     needs: [build-container]
     runs-on: ubuntu-latest
     
