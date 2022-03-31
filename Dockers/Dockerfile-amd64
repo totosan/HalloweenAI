@@ -1,9 +1,8 @@
-FROM balenalib/aarch64-python:3.8-bullseye 
+FROM balenalib/amd64-python:3.8-bullseye 
 
 ARG VIDEO_PATH
 ENV VIDEO_PATH=$VIDEO_PATH
 
-RUN ["cross-build-start"]
 RUN install_packages wget \
     cmake gfortran \
     build-essential unzip git \
@@ -23,6 +22,5 @@ RUN python -m pip install --upgrade pip numpy==1.21.4
 #    ln -s /usr/lib/python3/dist-packages/cv2.cpython-39-arm-linux-gnueabihf.so ./cv2.so
 #RUN cd / 
 COPY . .
-RUN pip install -r requirements_ARM64.txt
+RUN pip install -r requirements_AMD64.txt
 CMD [ "python", "main_gears.py" ]
-RUN ["cross-build-end"]

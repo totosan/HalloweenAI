@@ -1,0 +1,82 @@
+name: Docker Images
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore: 
+      - .yml
+      
+  workflow_dispatch:
+
+env:
+  DOCKER_REPO: totosan
+  VIDEO_PATH: https://youtu.be/G1VvHZ25j_k
+  ARCH: "amd64"
+  
+jobs:
+  build-container:
+    runs-on: ubuntu-latest
+      
+    steps:
+    - uses: actions/checkout@v3
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+    - name: Login to docker.io
+      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
+      
+    - name: prepare for x-build
+      run: |
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        docker buildx create --name multiarch --driver docker-container --use
+        docker buildx inspect --bootstrap
+        
+    - name: Build the Docker image
+      run: |
+        docker build . --file ./Dockers/Dockerfile-$ARCH \
+        --build-arg VIDEO_PATH=$VIDEO_PATH \
+        --tag $DOCKER_REPO/facedetection:$ARCH-${{ steps.date.outputs.date }} \
+        --tag $DOCKER_REPO/facedetection:$ARCH-pre 
+    - name: Push the image
+      run: |
+        docker push $DOCKER_REPO/facedetection:$ARCH-${{ steps.date.outputs.date }}
+        docker push $DOCKER_REPO/facedetection:$ARCH-pre
+  
+  deployToACA:
+    needs: [build-container]
+    runs-on: ubuntu-latest
+    
+    env:
+      RESOURCE_GROUP: "MVPSession"
+      LOCATION: "westeurope"
+      CONTAINERAPPS_ENVIRONMENT: "ai-tt-env"
+      CONTAINERAPPS_NAME: "facedetection-app"
+
+    steps:
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: prepare AZ EXTENSION
+      run: az extension add --name containerapp
+      
+    - name: create container app environment
+      if: ${{ env.ARCH == 'amd64' }}
+      run: |
+        az containerapp env create \
+        --name $CONTAINERAPPS_ENVIRONMENT \
+        --resource-group $RESOURCE_GROUP \
+        --location $LOCATION
+    - name: create container app with image running
+      if: ${{ env.ARCH == 'amd64' }}
+      run: |
+        az containerapp create \
+        --image $DOCKER_REPO/facedetection:$ARCH-pre \
+        --name $CONTAINERAPPS_NAME \
+        --resource-group $RESOURCE_GROUP \
+        --environment $CONTAINERAPPS_ENVIRONMENT \
+        --ingress external \
+        --target-port 8080 \
+        --cpu 2.0 \
+        --memory 4.0Gi

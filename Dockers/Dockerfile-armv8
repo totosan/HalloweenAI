@@ -12,9 +12,10 @@ ENV PYENV_ROOT $HOME/.pyenv
 ENV PYTHON_VERSION 3.9.5
 ENV ENABLE_CONTRIB ${ENABLE_CONTRIB}
 # modify make file to support multi process build
-ENV MAKEFLAGS="-j$(13)"
+ENV MAKEFLAGS="-j$(8)"
 
 #Enforces cross-compilation through Qemu
+RUN [ "cross-build-start" ]
 RUN install_packages \
     sudo \
     build-essential \
@@ -40,6 +41,7 @@ RUN git clone --single-branch --branch ${BRANCH} --recursive ${REPO_URL}
 # Build OpenCV
 WORKDIR /code/opencv-python
 RUN pip wheel .
+RUN [ "cross-build-end" ]
 
 
 FROM balenalib/armv7hf-ubuntu-python:3.9-bionic-build as dlib
@@ -48,6 +50,7 @@ ENV LC_ALL "C.UTF-8"
 ENV MAKEFLAGS="-j$(13)"
 
 #Enforces cross-compilation through Qemu
+RUN [ "cross-build-start" ]
 RUN install_packages \
     sudo \
     build-essential \
@@ -57,6 +60,7 @@ RUN install_packages \
     wget \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 RUN pip3 install wheel && pip wheel dlib
+RUN [ "cross-build-end" ]
 
 
 FROM balenalib/armv7hf-ubuntu-python:3.9-bionic-build as scipy
@@ -65,6 +69,7 @@ ENV LC_ALL "C.UTF-8"
 ENV MAKEFLAGS="-j$(13)"
 
 COPY --from=opencv_numpy /code/opencv-python/*numpy*.whl .
+RUN [ "cross-build-start" ]
 RUN install_packages \
     sudo \
     build-essential \
@@ -80,17 +85,21 @@ RUN git clone --single-branch --branch master --recursive https://github.com/sci
 WORKDIR /code/scipy
 RUN pip3 wheel .
 RUN cp *.whl /
+RUN [ "cross-build-end" ]
 
 FROM balenalib/aarch64-ubuntu-python:3.9-bionic-run AS wheels_libs
+RUN [ "cross-build-start" ]
 WORKDIR wheels
 COPY --from=opencv_numpy /code/opencv-python/*.whl /wheels/.
 COPY --from=dlib *.whl /wheels/.
 COPY --from=scipy *.whl /wheels/.
 COPY --from=opencv_numpy /usr/lib/arm-linux-gnueabihf/ /lib/
 COPY --from=scipy /usr/lib/arm-linux-gnueabihf/ /lib/
+RUN [ "cross-build-end" ]
 
 
 FROM balenalib/aarch64-ubuntu-python:3.9-bionic-run
+RUN [ "cross-build-start" ]
 COPY --from=wheels_libs /lib/ /usr/lib/
 COPY --from=wheels_libs /wheels/*.whl .
 COPY . .
@@ -98,3 +107,4 @@ RUN /usr/local/bin/python3.9 -m pip install --upgrade pip
 RUN for wheel in *.whl; do pip install $wheel; done 
 RUN pip install  --no-cache-dir --find-links . -r requirements_RPI.txt --extra-index-url https://www.piwheels.org/simple 
 RUN pip install --no-cache-dir --find-links . scipy
+RUN [ "cross-build-end" ]
