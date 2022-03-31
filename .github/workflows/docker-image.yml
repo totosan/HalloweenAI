@@ -17,10 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ARCH: arm64
-      IMAGE_TAG: ${{ date +%s }}
       
     steps:
     - uses: actions/checkout@v3
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
     - name: Login to docker.io
       run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
       
@@ -34,7 +37,7 @@ jobs:
       run: |
         docker build . --file ./Dockers/Dockerfile-$ARCH \
         --build-arg VIDEO_PATH=$VIDEO_PATH \
-        --tag $DOCKER_REPO/facedetection:$ARCH-$IMAGE_TAG
+        --tag $DOCKER_REPO/facedetection:$ARCH-${{ steps.date.outputs.date }}
     - name: Push the image
-      run: docker push ${DOCKER_REPO}/facedetection:$ARCH-$IMAGE_TAG
+      run: docker push ${DOCKER_REPO}/facedetection:$ARCH-${{ steps.date.outputs.date }}
       
