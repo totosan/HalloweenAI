@@ -3,7 +3,9 @@ name: Docker Images
 on:
   push:
     branches: [ master ]
-    
+    paths-ignore: 
+      - .yml
+      
   workflow_dispatch:
 
 env:
@@ -14,7 +16,7 @@ env:
 jobs:
 
   build-container:
-    
+    if: github.event == 'push'
     runs-on: ubuntu-latest
       
     steps:
