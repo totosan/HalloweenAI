@@ -52,6 +52,9 @@ jobs:
       CONTAINERAPPS_NAME: "facedetection-app"
 
     steps:
+    - name: prepare AZ EXTENSION
+      run: az extension add --source https://workerappscliextension.blob.core.windows.net/azure-cli-extension/containerapp-0.2.0-py2.py3-none-any.whl --yes
+
     - name: create container app environment
       if: ${{ env.ARCH == 'amd64' }}
       run: |
