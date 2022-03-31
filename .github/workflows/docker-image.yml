@@ -42,8 +42,8 @@ jobs:
       run: docker push ${DOCKER_REPO}/facedetection:$ARCH-${{ steps.date.outputs.date }}
   
   deployToACA:
-    if: $ARCH == 'amd64'
     needs: [build-container]
+    if: $ARCH == 'amd64'
     runs-on: ubuntu-latest
     
     env:
