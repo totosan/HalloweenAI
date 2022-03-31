@@ -75,7 +75,7 @@ jobs:
         --name $CONTAINERAPPS_NAME \
         --resource-group $RESOURCE_GROUP \
         --environment $CONTAINERAPPS_ENVIRONMENT \
-        --ingress external\
-        --target-port 8080\
-        --cpu 2.0\
+        --ingress external \
+        --target-port 8080 \
+        --cpu 2.0 \
         --memory 4.0Gi
