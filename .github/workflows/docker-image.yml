@@ -53,6 +53,10 @@ jobs:
       CONTAINERAPPS_NAME: "facedetection-app"
 
     steps:
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
     - name: prepare AZ EXTENSION
       run: az extension add --name containerapp
       
