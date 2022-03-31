@@ -43,7 +43,7 @@ jobs:
   
   deployToACA:
     needs: [build-container]
-    if: $ARCH == 'amd64'
+    if: ${{ env.ARCH == 'amd64' }}
     runs-on: ubuntu-latest
     
     env:
