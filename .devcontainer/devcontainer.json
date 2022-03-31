@@ -34,6 +34,7 @@
 		"docker-in-docker": "latest",
 		"git": "latest",
 		"sshd": "latest",
-		"python": "3.8"
+		"python": "3.8",
+		"azure-cli": "latest"
 	}
 }
