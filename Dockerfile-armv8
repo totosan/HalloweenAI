@@ -12,7 +12,7 @@ ENV PYENV_ROOT $HOME/.pyenv
 ENV PYTHON_VERSION 3.9.5
 ENV ENABLE_CONTRIB ${ENABLE_CONTRIB}
 # modify make file to support multi process build
-ENV MAKEFLAGS="-j$(13)"
+ENV MAKEFLAGS="-j$(8)"
 
 #Enforces cross-compilation through Qemu
 RUN install_packages \
