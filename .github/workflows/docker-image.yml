@@ -1,0 +1,32 @@
+name: Docker Images
+
+on:
+  push:
+    branches: [ master ]
+    
+  workflow_dispatch:
+
+env:
+  DOCKER_REPO: totosan
+  VIDEO_PATH: https://youtu.be/G1VvHZ25j_k
+  
+jobs:
+
+  build:
+    
+    runs-on: ubuntu-latest
+    env:
+      ARCH: arm64
+      
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login to docker.io
+      run: docker login -u $DOCKER_USER -p $DOCKER_PWD
+    - name: Build the Docker image
+      run: |
+        docker build . --file ./Dockers/Dockerfile-$ARCH \
+        --build-arg VIDEO_PATH=$VIDEO_PATH \
+        --tag $DOCKER_REPO/facedetection:$ARCH-$(date +%s)
+    - name: Push the image
+      run: docker push ${DOCKER_REPO}/facedetection:$ARCH-$(date +%s)
+      
