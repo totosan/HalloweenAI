@@ -14,9 +14,8 @@ env:
   ARCH: "amd64"
   
 jobs:
-
   build-container:
-    if: $(false)
+    if: github.event == 'pr'
     runs-on: ubuntu-latest
       
     steps:
