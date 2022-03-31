@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ARCH: arm64
+      IMAGE_TAG: $(date +%s)
       
     steps:
     - uses: actions/checkout@v3
@@ -33,7 +34,7 @@ jobs:
       run: |
         docker build . --file ./Dockers/Dockerfile-$ARCH \
         --build-arg VIDEO_PATH=$VIDEO_PATH \
-        --tag $DOCKER_REPO/facedetection:$ARCH-$(date +%s)
+        --tag $DOCKER_REPO/facedetection:$ARCH-$IMAGE_TAG
     - name: Push the image
-      run: docker push ${DOCKER_REPO}/facedetection:$ARCH-$(date +%s)
+      run: docker push ${DOCKER_REPO}/facedetection:$ARCH-$IMAGE_TAG
       
