@@ -43,7 +43,6 @@ jobs:
   
   deployToACA:
     needs: [build-container]
-    if: ${{ env.ARCH == 'amd64' }}
     runs-on: ubuntu-latest
     
     env:
@@ -54,12 +53,14 @@ jobs:
 
     steps:
     - name: create container app environment
+      if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp env create \
         --name $CONTAINERAPPS_ENVIRONMENT \
         --resource-group $RESOURCE_GROUP \
         --location $LOCATION
     - name: create container app with image running
+      if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp create \
         --image $DOCKER_REPO/facedetection:$ARCH-pre \
