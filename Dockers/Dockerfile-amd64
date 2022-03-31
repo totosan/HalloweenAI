@@ -1,5 +1,8 @@
 FROM balenalib/amd64-python:3.8-bullseye 
-RUN ["cross-build-start"]
+
+ARG VIDEO_PATH
+ENV VIDEO_PATH=$VIDEO_PATH
+
 RUN install_packages wget \
     cmake gfortran \
     build-essential unzip git \
@@ -21,4 +24,3 @@ RUN python -m pip install --upgrade pip numpy==1.21.4
 COPY . .
 RUN pip install -r requirements_AMD64.txt
 CMD [ "python", "main_gears.py" ]
-RUN ["cross-build-end"]

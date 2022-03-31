@@ -1,4 +1,8 @@
 FROM balenalib/aarch64-python:3.8-bullseye 
+
+ARG VIDEO_PATH
+ENV VIDEO_PATH=$VIDEO_PATH
+
 RUN ["cross-build-start"]
 RUN install_packages wget \
     cmake gfortran \
