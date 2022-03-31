@@ -16,7 +16,6 @@ env:
 jobs:
 
   build-container:
-    if: github.event == 'push'
     runs-on: ubuntu-latest
       
     steps:
@@ -44,7 +43,7 @@ jobs:
       run: docker push ${DOCKER_REPO}/facedetection:$ARCH-${{ steps.date.outputs.date }}
   
   deployToACA:
-    needs: [build-container]
+    #needs: [build-container]
     runs-on: ubuntu-latest
     
     env:
