@@ -16,7 +16,10 @@ env:
 jobs:
   build-container:
     runs-on: ubuntu-latest
-      
+    strategy:
+      matrix:
+        architecture: [arm64, amd64]
+        
     steps:
     - uses: actions/checkout@v3
     - name: Get current date
@@ -36,14 +39,12 @@ jobs:
       run: |
         docker build . --file ./Dockers/Dockerfile-$ARCH \
         --build-arg VIDEO_PATH=$VIDEO_PATH \
-        --tag $DOCKER_REPO/facedetection:$ARCH-${{ steps.date.outputs.date }} \
-        --tag $DOCKER_REPO/facedetection:$ARCH-pre 
+        --tag $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview 
     - name: Push the image
       run: |
-        docker push $DOCKER_REPO/facedetection:$ARCH-${{ steps.date.outputs.date }}
-        docker push $DOCKER_REPO/facedetection:$ARCH-pre
+        docker push $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview
   
-  deployToACA:
+  deploy-amd64-to-ACA:
     needs: [build-container]
     runs-on: ubuntu-latest
     
