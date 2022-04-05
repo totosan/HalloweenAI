@@ -2,12 +2,49 @@ RESOURCE_GROUP="MVPSession"
 LOCATION="westeurope"
 CONTAINERAPPS_ENVIRONMENT="ai-tt-env"
 CONTAINERAPPS_NAME="facedetection-app"
+CONTAINERAPPSSERVER_NAME="facedetection-server"
+STORAGE_ACCOUNT="facesink001"
+STORAGE_ACCOUNT_CONTAINER="facesContainer"
+
+az storage account create \
+  --name $STORAGE_ACCOUNT \
+  --resource-group $RESOURCE_GROUP \
+  --location "$LOCATION" \
+  --sku Standard_LRS \
+  --kind StorageV2
+
+STORAGE_ACCOUNT_KEY=`az storage account keys list --resource-group $RESOURCE_GROUP --account-name $STORAGE_ACCOUNT --query '[0].value' --out tsv`
+echo $STORAGE_ACCOUNT_KEY
 
 az containerapp env create \
   --name $CONTAINERAPPS_ENVIRONMENT \
   --resource-group $RESOURCE_GROUP \
   --location $LOCATION
 
+#statestore
+az containerapp env dapr-component set \
+    --name $CONTAINERAPPS_ENVIRONMENT --resource-group $RESOURCE_GROUP \
+    --dapr-component-name statestore \
+    --yaml ./deployment/storage.local.yaml
+
+#face server
+az containerapp create \
+  --image totosan/facedetectionapp:amd64-latest \
+  --name $CONTAINERAPPSSERVER_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --environment $CONTAINERAPPS_ENVIRONMENT \
+  --ingress external \
+  --target-port 8080 \
+  --transport http \
+  --min-replicas 1 \
+  --max-replicas 1 \
+  --cpu 2.0 \
+  --memory 4.0Gi \
+  --enable-dapr \
+  --dapr-app-port 8080 \
+  --dapr-app-id faceserver
+
+#face client
 az containerapp create \
   --image totosan/facedetection:amd64-latest \
   --name $CONTAINERAPPS_NAME \
@@ -16,7 +53,12 @@ az containerapp create \
   --ingress external\
   --target-port 8080\
   --cpu 2.0\
-  --memory 4.0Gi
+  --memory 4.0Gi \
+  --min-replicas 1 \
+  --max-replicas 1 \
+  --enable-dapr \
+  --dapr-app-port 8080 \
+  --dapr-app-id faceclient
 
 # after 5 min... vlt.
 LOG_ANALYTICS_WORKSPACE_CLIENT_ID=`az containerapp env show --name $CONTAINERAPPS_ENVIRONMENT --resource-group $RESOURCE_GROUP --query properties.appLogsConfiguration.logAnalyticsConfiguration.customerId --out tsv`

@@ -11,7 +11,7 @@ export $(grep -v '^#' .env | xargs -d '\n')
 ```
 - I suggest creating a virtual env
 
-## Running Docker buildx fpr arm32v7
+## Running Docker buildx for various "foreign" architectures like armXX
 If you have any issues building the docker image for ARM32v7...   
 Error could be:   
 *rpc error: code = Unknown desc = process "/dev/.buildkit_qemu_emulator*
@@ -24,10 +24,21 @@ docker buildx create --name multiarch --driver docker-container --use
 docker buildx inspect --bootstrap
 ```
 
-## Building Dockerfile
+## Building & pushing Dockerfile
+1. facedetection video app
 ```
-docker buildx build --platform linux/arm/v7 -t totosan/facedetection:latest --load .
+ARCH=arm64
+docker buildx build --platform linux/$ARCH -f ./Dockers/Dockerfile-$ARCH -t totosan/facedetection:$ARCH-latest --load .
+docker push totosan/facedetection:$ARCH-latest
 ```
+
+2. facedetection processor server
+```
+ARCH=amd64
+docker buildx build --platform linux/$ARCH -f ./Dockers/FaceApp.Dockerfile -t totosan/facedetectionapp:$ARCH-latest --load .
+docker push totosan/facedetectionapp:$ARCH-latest
+```
+
 
 ### Issues with building Docker and OpenCV, DLib
 - opencv is build in a dev-stage of the dockerfile with the version 4.5.4.35 as wheel

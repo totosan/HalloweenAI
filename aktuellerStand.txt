@@ -1,0 +1,5 @@
+curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"1\"}" https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainerapps.io
+curl https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainerapps.io
+
+curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"1\"}" https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
+curl https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/

@@ -23,6 +23,7 @@ from starlette.responses import StreamingResponse
 from starlette.routing import Route
 
 import uvicorn, asyncio, cv2
+import requests
 
 from Tracking.DetectionBase import DetectionBase
 from Tracking.centroidtracker import CentroidTracker
@@ -40,6 +41,8 @@ class VideoProcessor():
     def __init__(self, ImageServer, Detector) -> None:
         video_source = os.getenv("VIDEO_PATH","video.mp4")
         streamMode = True if "youtu" in video_source else False
+        self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3500)
+        self.dapr_url = "http://localhost:{}/".format(self.dapr_port)
 
         # various performance tweaks
         self.options = {
@@ -111,6 +114,16 @@ class VideoProcessor():
                 if detections.any():
                     self.outputQ.put_nowait(objOfInterest)
 
+    def sendToFacesStore(self, id):
+        message = {"id":f"{id}"}
+        print(f"sending FaceId to service: {self.dapr_url}")
+        response = requests.post(self.dapr_url, json=message, timeout=5, headers = {"dapr-app-id": "faceserver"} )
+        try:
+            if not response.ok:
+                print("HTTP %d => %s" % (response.status_code,
+                                        response.content.decode("utf-8")), flush=True)
+        except Exception as e:
+            print(e, flush=True)
 
     def addFacesIfExists(self, frame):
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -131,6 +144,9 @@ class VideoProcessor():
 
         for (objId, centroidItem) in trackedCentroidItems.items():
             trackedIdObj = self.trackableIDs.get(objId,None)
+            if trackedIdObj is None:
+                print(f"New face detected: {objId}")
+                self.sendToFacesStore(objId)
             trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
             self.trackableIDs[objId] = trackedIdObj
 

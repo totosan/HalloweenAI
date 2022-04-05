@@ -24,5 +24,6 @@ RUN python -m pip install --upgrade pip numpy==1.21.4
 #RUN cd / 
 COPY . .
 RUN pip install -r requirements_ARM64.txt
+EXPOSE 3500
 CMD [ "python", "main_gears.py" ]
 RUN ["cross-build-end"]
