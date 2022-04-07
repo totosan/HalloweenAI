@@ -3,8 +3,9 @@ name: Deploy video processing service
 on:
   push:
     branches: [ master ]
-    paths-ignore: 
-      - .yml
+    paths: 
+      - '!faceDetectApp/**'
+      - '!.yml'
       
   workflow_dispatch:
 

@@ -3,8 +3,9 @@ name: Deploy face processing service
 on:
   push:
     branches: [ master ]
-    paths-ignore: 
-      - .yml
+    paths:
+      - 'faceDetectApp/**'
+      - '!**/.yml'
       
   workflow_dispatch:
 
@@ -71,7 +72,7 @@ jobs:
       run: az extension add --name containerapp
 
     - name: create DAPR component (statestore)
-      run: ./deployment/createRedisYaml.sh
+      run: ./deployment/createRedisYaml.sh > /dev/null
 
     - name: create container app environment
       if: ${{ env.ARCH == 'amd64' }}
