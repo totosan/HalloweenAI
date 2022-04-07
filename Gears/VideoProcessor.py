@@ -38,7 +38,7 @@ shared = multiprocessing.Manager().dict()
 
 class VideoProcessor():
     
-    def __init__(self, ImageServer, Detector) -> None:
+    def __init__(self, Detector) -> None:
         video_source = os.getenv("VIDEO_PATH","video.mp4")
         streamMode = True if "youtu" in video_source else False
         self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3500)
