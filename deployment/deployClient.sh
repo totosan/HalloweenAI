@@ -1,11 +1,6 @@
 #!/bin/bash
 set -e
 
-RESOURCE_GROUP="MVPSession"
-LOCATION="westeurope"
-CONTAINERAPPS_ENVIRONMENT="ai-tt-env"
-CONTAINERAPPS_NAME="facedetection-app"
-
 ARCH=amd64
 VERS="v1.0"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k

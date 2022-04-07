@@ -3,18 +3,7 @@ LOCATION="westeurope"
 CONTAINERAPPS_ENVIRONMENT="ai-tt-env"
 CONTAINERAPPS_NAME="facedetection-app"
 CONTAINERAPPSSERVER_NAME="facedetection-server"
-STORAGE_ACCOUNT="facesink001"
-STORAGE_ACCOUNT_CONTAINER="facesContainer"
 
-az storage account create \
-  --name $STORAGE_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --location "$LOCATION" \
-  --sku Standard_LRS \
-  --kind StorageV2
-
-STORAGE_ACCOUNT_KEY=`az storage account keys list --resource-group $RESOURCE_GROUP --account-name $STORAGE_ACCOUNT --query '[0].value' --out tsv`
-echo $STORAGE_ACCOUNT_KEY
 
 az containerapp env create \
   --name $CONTAINERAPPS_ENVIRONMENT \
@@ -26,6 +15,10 @@ az containerapp env dapr-component set \
     --name $CONTAINERAPPS_ENVIRONMENT --resource-group $RESOURCE_GROUP \
     --dapr-component-name statestore \
     --yaml ./deployment/storage.local.yaml
+  
+az containerapp secret set --name $CONTAINERAPPSSERVER_NAME \
+                           --resource-group $RESOURCE_GROUP \
+                           --secrets account-key=$STORAGE_ACCOUNT_KEY
 
 #face server
 az containerapp create \
@@ -81,3 +74,11 @@ echo "Creating SP for RBAC with name $servicePrincipalName, with role $roleName 
 az ad sp create-for-rbac --name $servicePrincipalName --role $roleName \
 --scopes /subscriptions/$subscriptionID/resourceGroups/$RESOURCE_GROUP
 
+az storage account update \
+    --name $STORAGE_ACCOUNT \
+    --resource-group $RESOURCE_GROUP \
+    --allow-blob-public-access true
+
+
+# Testings
+curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"2\"}" https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainerapps.io

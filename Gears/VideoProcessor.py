@@ -43,6 +43,7 @@ class VideoProcessor():
         streamMode = True if "youtu" in video_source else False
         self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3500)
         self.dapr_url = "http://localhost:{}/".format(self.dapr_port)
+        self.dapr_used = os.getenv("DAPR_USED", False)
 
         # various performance tweaks
         self.options = {
@@ -144,7 +145,7 @@ class VideoProcessor():
 
         for (objId, centroidItem) in trackedCentroidItems.items():
             trackedIdObj = self.trackableIDs.get(objId,None)
-            if trackedIdObj is None:
+            if trackedIdObj is None and self.dapr_used:
                 print(f"New face detected: {objId}")
                 self.sendToFacesStore(objId)
             trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)

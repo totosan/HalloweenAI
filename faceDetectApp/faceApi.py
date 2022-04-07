@@ -4,6 +4,7 @@ import os
 import requests
 from flask import Flask, request
 import json
+from dapr.clients import DaprClient
 
 daprPort = os.getenv("DAPR_HTTP_PORT") 
 daprGRPCPort = os.getenv("DAPR_GRPC_PORT")
@@ -15,13 +16,9 @@ app=Flask(__name__)
 def sendToStateStore(id):
     message = [{"id":f"{id}", "status":"received"}]
     print(f"sending FaceId to storage: {stateUrl}")
-    response = requests.post(stateUrl, json=message, timeout=5, headers = {"Content-Type": "application/json"} )
-    try:
-        if not response.ok:
-            print("HTTP %d => %s" % (response.status_code,
-                                    response.content.decode("utf-8")), flush=True)
-    except Exception as e:
-        print(e, flush=True)
+    with DaprClient() as d:
+        # Save state
+        d.save_state(store_name="statestore", key="faceId", value=id)
 
 @app.route("/", methods=['POST','GET'])
 def faceCallApi():
