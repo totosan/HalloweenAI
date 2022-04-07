@@ -22,5 +22,6 @@ RUN python -m pip install --upgrade pip numpy==1.21.4
 #    ln -s /usr/lib/python3/dist-packages/cv2.cpython-39-arm-linux-gnueabihf.so ./cv2.so
 #RUN cd / 
 COPY . .
-RUN pip install -r requirements_AMD64.txt
+RUN pip install -r requirements_AMD64.txt && \
+    pip install dapr --no-cache-dir
 CMD [ "python", "main_gears.py" ]
