@@ -1,4 +1,4 @@
-name: Docker Images
+name: Deploy face processing service
 
 on:
   push:
@@ -17,6 +17,7 @@ jobs:
         
     env:
       VERS: "preview"
+      DOCKER_REPO: "totosan"
 
     steps:
     - uses: actions/checkout@v3
@@ -58,6 +59,7 @@ jobs:
       CONTAINERAPPSSERVER_NAME: "facedetection-server"
       ARCH: "amd64"
       VERS: "preview"
+      DOCKER_REPO: "totosan"
 
     steps:
     - uses: azure/login@v1
@@ -95,7 +97,7 @@ jobs:
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp create \
-          --image totosan/facedetectionapp:${{ env.ARCH }}-$VERS \
+          --image $DOCKER_REPO/facedetectionapp:${{ env.ARCH }}-$VERS \
           --name $CONTAINERAPPSSERVER_NAME \
           --resource-group $RESOURCE_GROUP \
           --environment $CONTAINERAPPS_ENVIRONMENT \

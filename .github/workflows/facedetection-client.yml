@@ -1,4 +1,4 @@
-name: Docker Images
+name: Deploy video processing service
 
 on:
   push:
@@ -8,10 +8,7 @@ on:
       
   workflow_dispatch:
 
-env:
-  DOCKER_REPO: totosan
-  VIDEO_PATH: https://youtu.be/G1VvHZ25j_k
-  ARCH: "amd64"
+
   
 jobs:
   build-container:
@@ -19,7 +16,11 @@ jobs:
     strategy:
       matrix:
         architecture: [arm64, amd64]
-        
+    env:
+      DOCKER_REPO: "totosan"
+      VIDEO_PATH: "https://youtu.be/G1VvHZ25j_k"
+      ARCH: "amd64"
+
     steps:
     - uses: actions/checkout@v3
     - name: Get current date
@@ -54,6 +55,7 @@ jobs:
       CONTAINERAPPS_ENVIRONMENT: "ai-tt-env"
       CONTAINERAPPS_NAME: "facedetection-app"
       CONTAINERAPPSSERVER_NAME: "facedetection-server"
+      DOCKER_REPO: "totosan"
 
     steps:
     - uses: azure/login@v1
@@ -91,7 +93,7 @@ jobs:
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp create \
-          --image totosan/facedetection:$ARCH-preview \
+          --image $DOCKER_REPO/facedetection:$ARCH-preview \
           --name $CONTAINERAPPS_NAME \
           --resource-group $RESOURCE_GROUP \
           --environment $CONTAINERAPPS_ENVIRONMENT \
@@ -109,7 +111,7 @@ jobs:
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp create \
-          --image totosan/facedetectionapp:${{ env.ARCH }}-preview \
+          --image $DOCKER_REPO/facedetectionapp:${{ env.ARCH }}-preview \
           --name $CONTAINERAPPSSERVER_NAME \
           --resource-group $RESOURCE_GROUP \
           --environment $CONTAINERAPPS_ENVIRONMENT \
