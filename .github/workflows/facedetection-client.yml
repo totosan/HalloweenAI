@@ -68,9 +68,6 @@ jobs:
     - name: prepare AZ EXTENSION
       run: az extension add --name containerapp
 
-    - name: create DAPR component (statestore)
-      run: ./deployment/createRedisYaml.sh
-
     - name: create container app environment
       if: ${{ env.ARCH == 'amd64' }}
       run: |
@@ -78,19 +75,6 @@ jobs:
         --name $CONTAINERAPPS_ENVIRONMENT \
         --resource-group $RESOURCE_GROUP \
         --location $LOCATION
-    
-    - name: enable DAPR
-      env:
-        REDIS_NAME: "facesink001"
-        SKU: "basic"
-        SIZE: "C0"
-        DAPR_SCOPE: "faceserver"
-      run: |
-        az containerapp env dapr-component set \
-            --name $CONTAINERAPPS_ENVIRONMENT \
-            --resource-group $RESOURCE_GROUP \
-            --dapr-component-name statestore \
-            --yaml ./deployment/redis.local.yaml
 
     - name: create container app with image running
       if: ${{ env.ARCH == 'amd64' }}
@@ -109,22 +93,3 @@ jobs:
           --enable-dapr \
           --dapr-app-port 8080 \
           --dapr-app-id faceclient
-
-    - name: create container app with image running
-      if: ${{ env.ARCH == 'amd64' }}
-      run: |
-        az containerapp create \
-          --image $DOCKER_REPO/facedetectionapp:${{ env.ARCH }}-preview \
-          --name $CONTAINERAPPSSERVER_NAME \
-          --resource-group $RESOURCE_GROUP \
-          --environment $CONTAINERAPPS_ENVIRONMENT \
-          --ingress external \
-          --target-port 3500 \
-          --transport http \
-          --min-replicas 1 \
-          --max-replicas 1 \
-          --cpu 2.0 \
-          --memory 4.0Gi \
-          --enable-dapr \
-          --dapr-app-port 3500 \
-          --dapr-app-id faceserver
