@@ -8,20 +8,24 @@ on:
       - '!.yml'
       
   workflow_dispatch:
-
-
-  
+ 
 jobs:
   build-container:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        architecture: [arm64, amd64]
+        include:
+          - architecture: amd64
+            synonym: "amd64"
+          - architecture: arm64
+            synonym: "aarch64"
+          - architecture: armv7
+            synonym: "arm/v7"
     env:
       DOCKER_REPO: "totosan"
       VIDEO_PATH: "https://youtu.be/G1VvHZ25j_k"
-      ARCH: "amd64"
-
+      ARCH: ${{ matrix.architecture }}
+      
     steps:
     - uses: actions/checkout@v3
     - name: Get current date
