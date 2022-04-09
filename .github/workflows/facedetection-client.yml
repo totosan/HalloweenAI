@@ -21,6 +21,7 @@ jobs:
       DOCKER_REPO: "totosan"
       VIDEO_PATH: "https://youtu.be/G1VvHZ25j_k"
       ARCH: "amd64"
+      DAPR_USED: True
 
     steps:
     - uses: actions/checkout@v3
@@ -40,7 +41,7 @@ jobs:
     - name: Build the Docker image
       run: |
         docker build . --file ./Dockers/Dockerfile-$ARCH \
-        --build-arg VIDEO_PATH=$VIDEO_PATH \
+        --build-arg VIDEO_PATH=$VIDEO_PATH DAPR_USED=$DAPR_USED \
         --tag $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview 
     - name: Push the image
       run: |
