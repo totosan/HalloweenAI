@@ -19,8 +19,7 @@ jobs:
             synonym: "amd64"
           - architecture: arm64
             synonym: "aarch64"
-          - architecture: armv7
-            synonym: "arm/v7"
+
     env:
       DOCKER_REPO: "totosan"
       VIDEO_PATH: "https://youtu.be/G1VvHZ25j_k"
