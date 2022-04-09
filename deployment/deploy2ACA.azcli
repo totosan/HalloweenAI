@@ -81,4 +81,4 @@ az storage account update \
 
 
 # Testings
-curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"2\"}" https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainerapps.io
+curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"3\"}" https://facedetection-server.lemonmushroom-7af2b425.westeurope.azurecontainerapps.io

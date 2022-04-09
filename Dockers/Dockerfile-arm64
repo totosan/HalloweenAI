@@ -1,7 +1,10 @@
 FROM balenalib/aarch64-python:3.8-bullseye 
 
 ARG VIDEO_PATH
+ARG DAPR_USED=False
+
 ENV VIDEO_PATH=$VIDEO_PATH
+ENV DAPR_USED=$DAPR_USED
 
 RUN ["cross-build-start"]
 RUN install_packages wget \

@@ -19,6 +19,9 @@ if [ ! -z "$1" ]; then
     else
         VERS=$1
     fi
+else
+    echo "Usage: $0 <version>"
+    exit 1
 fi
 
 echo "*******************************************************************************"
@@ -31,9 +34,9 @@ echo "Create docker image & push to Docker.io"
 if [ -z "$(docker images -q totosan/facedetection:$ARCH-$VERS)" ]; then
     docker login -u totosan
 fi
-docker build . -f ./Dockers/Dockerfile-$ARCH --build-arg VIDEO_PATH=$VIDEO_PATH -t totosan/facedetection:$ARCH-$VERS -t totosan/facedetection:$ARCH-latest
-docker push totosan/facedetection:$ARCH-$VERS
-docker push totosan/facedetection:$ARCH-latest
+#docker build . -f ./Dockers/Dockerfile-$ARCH --build-arg VIDEO_PATH=$VIDEO_PATH -t totosan/facedetection:$ARCH-$VERS -t totosan/facedetection:$ARCH-latest
+#docker push totosan/facedetection:$ARCH-$VERS
+#docker push totosan/facedetection:$ARCH-latest
 
 #if containerapp already exists, delete it
 if [ $(az containerapp list -g $RESOURCE_GROUP -o table | grep $CONTAINERAPPS_NAME | wc -l) -gt 0 ]; then

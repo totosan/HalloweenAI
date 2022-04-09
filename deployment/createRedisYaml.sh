@@ -1,5 +1,5 @@
 #!/bin/bash
-REDIS_NAME="facesink001"
+REDIS_NAME="facesink002"
 SKU="basic"
 SIZE="C0"
 DAPR_SCOPE="faceserver"

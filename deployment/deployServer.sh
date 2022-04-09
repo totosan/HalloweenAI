@@ -27,14 +27,14 @@ if [ -z "$(docker images -q totosan/facedetectionapp:$ARCH-$VERS)" ]; then
 fi
 
 
-  if [ $ARCH == "arm64" ]; then
-    docker buildx build --platform linux/$ARCH -f ./Dockers/FaceApp.Dockerfile -t totosan/facedetectionapp:$ARCH-$VERS -t totosan/facedetectionapp:$ARCH-latest --load .
-    docker push totosan/facedetectionapp:$ARCH-$VERS && docker push totosan/facedetectionapp:$ARCH-latest
-    exit 1
-  else
-    docker build . -f ./Dockers/FaceApp.Dockerfile -t totosan/facedetectionapp:$ARCH-$VERS -t totosan/facedetectionapp:$ARCH-latest
-    docker push totosan/facedetectionapp:$ARCH-$VERS && docker push totosan/facedetectionapp:$ARCH-latest
-  fi
+if [ $ARCH == "arm64" ]; then
+  docker buildx build --platform linux/$ARCH -f ./Dockers/FaceApp.Dockerfile -t totosan/facedetectionapp:$ARCH-$VERS -t totosan/facedetectionapp:$ARCH-latest --load .
+  docker push totosan/facedetectionapp:$ARCH-$VERS && docker push totosan/facedetectionapp:$ARCH-latest
+  exit 1
+else
+  docker build . -f ./Dockers/FaceApp.Dockerfile -t totosan/facedetectionapp:$ARCH-$VERS -t totosan/facedetectionapp:$ARCH-latest
+  docker push totosan/facedetectionapp:$ARCH-$VERS && docker push totosan/facedetectionapp:$ARCH-latest
+fi
 
 
 echo "*******************************************************************************"

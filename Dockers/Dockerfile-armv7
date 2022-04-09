@@ -98,6 +98,13 @@ COPY --from=scipy /usr/lib/arm-linux-gnueabihf/ /lib/
 
 
 FROM balenalib/armv7hf-ubuntu-python:3.9-bionic-run
+
+ARG VIDEO_PATH
+ARG DAPR_USED=False
+
+ENV VIDEO_PATH=$VIDEO_PATH
+ENV DAPR_USED=$DAPR_USED
+
 #COPY --from=opencv_numpy /usr/lib/arm-linux-gnueabihf/ /usr/lib/
 #COPY --from=scipy /usr/lib/arm-linux-gnueabihf/ /usr/lib/
 COPY --from=wheels_libs /lib/ /usr/lib/
