@@ -11,6 +11,7 @@ on:
           
 jobs:
   build-container:
+    continue-on-error: true
     strategy:
       matrix:
         include:
@@ -42,11 +43,10 @@ jobs:
       continue-on-error: true
       
     - name: prepare for x-build
-      if: ${{ matrix.architecture == 'amd64'}}
       run: |
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-        docker buildx create --name multiarch --driver docker-container --use
-        docker buildx inspect --bootstrap
+        sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        sudo docker buildx create --name multiarch --driver docker-container --use
+        sudo docker buildx inspect --bootstrap
         
     - name: Build the Docker image
       run: |
