@@ -8,25 +8,17 @@ on:
       - '!.yml'
       
   workflow_dispatch:
-    inputs:
-      selfhosted:
-        description: 'Choose for build ARM64 image on selfhosted device'
-        required: true
-        type: boolean
-        default: false
-          
+ 
 jobs:
   build-container:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - architecture: amd64
             synonym: "amd64"
-            runson: ubuntu-latest 
           - architecture: arm64
             synonym: "aarch64"
-            runson: nvidia-gpu
-    runs-on: ${{ matrix.runson }}
 
     env:
       DOCKER_REPO: "totosan"

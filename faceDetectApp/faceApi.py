@@ -5,6 +5,7 @@ import requests
 from flask import Flask, request
 import json
 from dapr.clients import DaprClient
+#from Tracking.FaceAPI import FaceDetection
 
 daprPort = os.getenv("DAPR_HTTP_PORT") 
 daprGRPCPort = os.getenv("DAPR_GRPC_PORT")
@@ -13,12 +14,14 @@ stateUrl = f"http://localhost:{daprPort}/v1.0/state/{stateStoreName}"
 
 app=Flask(__name__)
 
+#detector = FaceDetection()
+
 def sendToStateStore(id):
     message = [{"id":f"{id}", "status":"received"}]
     print(f"sending FaceId to storage: {stateUrl}")
     with DaprClient() as d:
         # Save state
-        d.save_state(store_name="statestore", key="faceId", value=id)
+        d.save_state(store_name="statestore", key=id, value="received")
 
 @app.route("/", methods=['POST','GET'])
 def faceCallApi():
