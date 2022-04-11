@@ -118,8 +118,8 @@ class VideoProcessor():
     def sendToFacesStore(self, id):
         message = {"id":f"{id}"}
         print(f"sending FaceId to service: {self.dapr_url}")
-        response = requests.post(self.dapr_url, json=message, timeout=5, headers = {"dapr-app-id": "faceserver"} )
         try:
+            response = requests.post(self.dapr_url, json=message, timeout=5, headers = {"dapr-app-id": "faceserver"} )
             if not response.ok:
                 print("HTTP %d => %s" % (response.status_code,
                                         response.content.decode("utf-8")), flush=True)

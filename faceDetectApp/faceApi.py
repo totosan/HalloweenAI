@@ -17,11 +17,14 @@ app=Flask(__name__)
 #detector = FaceDetection()
 
 def sendToStateStore(id):
-    message = [{"id":f"{id}", "status":"received"}]
-    print(f"sending FaceId to storage: {stateUrl}")
-    with DaprClient() as d:
-        # Save state
-        d.save_state(store_name="statestore", key=id, value="received")
+    try:
+        message = [{"id":f"{id}", "status":"received"}]
+        print(f"sending FaceId to storage: {stateUrl}")
+        with DaprClient() as d:
+            # Save state
+            d.save_state(store_name="statestore", key=id, value="received")
+    except Exception as e:
+        print(f"Error: {e}")
 
 @app.route("/", methods=['POST','GET'])
 def faceCallApi():
