@@ -5,7 +5,7 @@ on:
     
 jobs:
   deploy-amd64-to-ACA:
-    needs: [build-container]
+    name: deploy the image to ACA
     runs-on: ubuntu-latest
     
     env:
