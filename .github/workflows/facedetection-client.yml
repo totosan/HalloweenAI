@@ -64,4 +64,4 @@ jobs:
 
   call_deploy_job:
     needs: build-container
-    uses: .github/workflows/deploy-facedetection-video.yml
+    uses: ./.github/workflows/deploy-facedetection-video.yml@main
