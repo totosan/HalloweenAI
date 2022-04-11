@@ -1,4 +1,4 @@
-name: Deploy video processing service
+name: Build video processing images
 
 on:
   push:
@@ -61,6 +61,7 @@ jobs:
     - name: Push the image
       run: |
         sudo docker push $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview
-  
-    - uses: .github/workflows/deploy-facedetection-video.yml
-      if: ${{ matrix.architecture == 'amd64' }}
+
+  call_deploy_job:
+    needs: build-container
+    uses: .github/workflows/deploy-facedetection-video.yml
