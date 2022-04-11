@@ -41,13 +41,14 @@ jobs:
       run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
     - name: Login to docker.io
-      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
+      run: sudo docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
   
     - uses: satackey/action-docker-layer-caching@v0.0.11
       # Ignore the failure of a step and avoid terminating the job.
       continue-on-error: true
       
     - name: prepare for x-build
+      if: ${{ matrix.architecture == 'amd64'}}
       run: |
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         docker buildx create --name multiarch --driver docker-container --use
@@ -55,13 +56,13 @@ jobs:
         
     - name: Build the Docker image
       run: |
-        docker build . --file ./Dockers/Dockerfile-$ARCH \
+        sudo docker build . --file ./Dockers/Dockerfile-$ARCH \
         --build-arg VIDEO_PATH=$VIDEO_PATH \
         --build-arg DAPR_USED=$DAPR_USED \
         --tag $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview 
     - name: Push the image
       run: |
-        docker push $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview
+        sudo docker push $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview
   
   deploy-amd64-to-ACA:
     needs: [build-container]

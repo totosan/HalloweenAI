@@ -1,4 +1,4 @@
-name: Deploy video processing service
+name: 2.Deploy video processing service
 
 on:
   push:
