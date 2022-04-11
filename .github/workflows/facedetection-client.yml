@@ -41,7 +41,11 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.11
       # Ignore the failure of a step and avoid terminating the job.
       continue-on-error: true
-      
+      with:
+        key: facedetection-${{ matrix.architecture }}-{hash}
+        restore-keys: |
+          facedetection-${{ matrix.architecture }}-
+
     - name: prepare for x-build
       run: |
         sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
@@ -58,50 +62,5 @@ jobs:
       run: |
         sudo docker push $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview
   
-  deploy-amd64-to-ACA:
-    needs: [build-container]
-    runs-on: ubuntu-latest
-    
-    env:
-      RESOURCE_GROUP: "MVPSession"
-      LOCATION: "westeurope"
-      CONTAINERAPPS_ENVIRONMENT: "ai-tt-env"
-      CONTAINERAPPS_NAME: "facedetection-app"
-      CONTAINERAPPSSERVER_NAME: "facedetection-server"
-      ARCH: "amd64"
-      DOCKER_REPO: "totosan"
-
-    steps:
-    - uses: actions/checkout@v3
-    - uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-        
-    - name: prepare AZ EXTENSION
-      run: az extension add --name containerapp
-
-    - name: create container app environment
-      if: ${{ env.ARCH == 'amd64' }}
-      run: |
-        az containerapp env create \
-        --name $CONTAINERAPPS_ENVIRONMENT \
-        --resource-group $RESOURCE_GROUP \
-        --location $LOCATION
-
-    - name: create container app with image running
-      if: ${{ env.ARCH == 'amd64' }}
-      run: |
-        az containerapp create \
-          --image $DOCKER_REPO/facedetection:$ARCH-preview \
-          --name $CONTAINERAPPS_NAME \
-          --resource-group $RESOURCE_GROUP \
-          --environment $CONTAINERAPPS_ENVIRONMENT \
-          --ingress external\
-          --target-port 8080\
-          --cpu 2.0\
-          --memory 4.0Gi \
-          --min-replicas 1 \
-          --max-replicas 1 \
-          --enable-dapr \
-          --dapr-app-port 8080 \
-          --dapr-app-id faceclient
+    - uses: .github/workflows/deploy-facedetection-video.yml
+      if: ${{ matrix.architecture == 'amd64' }}
