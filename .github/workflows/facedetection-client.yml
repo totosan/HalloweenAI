@@ -58,7 +58,7 @@ jobs:
     - name: if, build on Jetson Nano, take different Dockerfile
       id: dockerfile
       run: |
-        if ${{ matrix.architecture == 'arm64' }}
+        if("${{ matrix.architecture == 'arm64' }}" -eq "true")
           echo "::set-output name=filename::Dockerfile-arm64xbuild"
         else
           echo "::set-output name=filename::Dockerfile-arm64"
