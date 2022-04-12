@@ -1,4 +1,4 @@
-name: Build video processing images
+name: Build & Deploys video processing images
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
           
 jobs:
-  build-container:
+  build-deploy-container:
     continue-on-error: true
     strategy:
       matrix:
@@ -29,6 +29,14 @@ jobs:
       ARCH: ${{ matrix.architecture }}
       DAPR_USED: True      
 
+      RESOURCE_GROUP: "MVPSession"
+      LOCATION: "westeurope"
+      CONTAINERAPPS_ENVIRONMENT: "ai-tt-env"
+      CONTAINERAPPS_NAME: "facedetection-app"
+      CONTAINERAPPSSERVER_NAME: "facedetection-server"
+      ARCH: "amd64"
+      DOCKER_REPO: "totosan"
+      
     steps:
     - uses: actions/checkout@v3
     - name: Get current date
@@ -74,6 +82,34 @@ jobs:
       run: |
         sudo docker push $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview
 
-  call_deploy_job:
-    needs: build-container
-    uses: ./.github/workflows/deploy-facedetection-video.yml
+      ### DEPLOYMENT
+
+    - name: prepare AZ EXTENSION
+      if: ${{ env.ARCH == 'amd64' }}
+      run: az extension add --name containerapp
+
+    - name: create container app environment
+      if: ${{ env.ARCH == 'amd64' }}
+      run: |
+        az containerapp env create \
+        --name $CONTAINERAPPS_ENVIRONMENT \
+        --resource-group $RESOURCE_GROUP \
+        --location $LOCATION
+
+    - name: create container app with image running
+      if: ${{ env.ARCH == 'amd64' }}
+      run: |
+        az containerapp create \
+          --image $DOCKER_REPO/facedetection:$ARCH-preview \
+          --name $CONTAINERAPPS_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --environment $CONTAINERAPPS_ENVIRONMENT \
+          --ingress external\
+          --target-port 8080\
+          --cpu 2.0\
+          --memory 4.0Gi \
+          --min-replicas 1 \
+          --max-replicas 1 \
+          --enable-dapr \
+          --dapr-app-port 8080 \
+          --dapr-app-id faceclient
