@@ -34,8 +34,6 @@ jobs:
       CONTAINERAPPS_ENVIRONMENT: "ai-tt-env"
       CONTAINERAPPS_NAME: "facedetection-app"
       CONTAINERAPPSSERVER_NAME: "facedetection-server"
-      ARCH: "amd64"
-      DOCKER_REPO: "totosan"
       
     steps:
     - uses: actions/checkout@v3
