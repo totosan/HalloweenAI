@@ -21,7 +21,7 @@ jobs:
           - architecture: arm64
             synonym: "aarch64"
             runson: nvidia-gpu
-    runs-on: ${{ matrix.runson }}
+    runs-on: ubuntu-latest
 
     env:
       DOCKER_REPO: "totosan"
@@ -64,7 +64,7 @@ jobs:
     - name: if, build on Jetson Nano, take different Dockerfile
       id: dockerfile
       run: |
-        if [ "${{ matrix.architecture == 'arm64' }}" ]; then
+        if [ "${{ jobs.build-deploy-container.runs-on == 'nvidia-gpu' }}" ]; then
           echo "::set-output name=filename::Dockerfile-arm64xbuild"
         else
           echo "::set-output name=filename::Dockerfile-arm64"
