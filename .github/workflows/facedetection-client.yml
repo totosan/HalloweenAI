@@ -71,6 +71,7 @@ jobs:
           fi
         else
           echo "::set-output name=filename::Dockerfile-${{ matrix.architecture }}"
+        fi
           
     - name: Build the Docker image
       run: |
