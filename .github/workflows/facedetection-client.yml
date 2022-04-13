@@ -48,7 +48,6 @@ jobs:
         password: ${{ secrets.DOCKER_PWD }}
   
     - uses: satackey/action-docker-layer-caching@v0.0.11
-      if: ${{ matrix.architecture == 'amd64' }}
       # Ignore the failure of a step and avoid terminating the job.
       continue-on-error: true
       with:
@@ -64,7 +63,7 @@ jobs:
     - name: if, build on Jetson Nano, take different Dockerfile
       id: dockerfile
       run: |
-        if [ "${{ runner.arch == 'ARM64' }}" ]; then
+        if [ "${{ runner.arch == 'ARM64' }}" -eq "true" ]; then
           echo "::set-output name=filename::Dockerfile-arm64xbuild"
         else
           echo "::set-output name=filename::Dockerfile-arm64"
