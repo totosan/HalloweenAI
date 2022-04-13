@@ -72,7 +72,7 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        sudo docker build . --file ./Dockers/${{ steps.dockerfile.outputs.extension }} \
+        sudo docker build . --file ./Dockers/${{ steps.dockerfile.outputs.filename }} \
         --build-arg VIDEO_PATH=$VIDEO_PATH \
         --build-arg DAPR_USED=$DAPR_USED \
         --tag $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview 
