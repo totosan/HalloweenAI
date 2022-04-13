@@ -84,7 +84,10 @@ jobs:
         docker push $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview
 
       ### DEPLOYMENT
-
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
     - name: prepare AZ EXTENSION
       if: ${{ env.ARCH == 'amd64' }}
       run: az extension add --name containerapp
