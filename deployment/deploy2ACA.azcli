@@ -2,12 +2,42 @@ RESOURCE_GROUP="MVPSession"
 LOCATION="westeurope"
 CONTAINERAPPS_ENVIRONMENT="ai-tt-env"
 CONTAINERAPPS_NAME="facedetection-app"
+CONTAINERAPPSSERVER_NAME="facedetection-server"
+
 
 az containerapp env create \
   --name $CONTAINERAPPS_ENVIRONMENT \
   --resource-group $RESOURCE_GROUP \
   --location $LOCATION
 
+#statestore
+az containerapp env dapr-component set \
+    --name $CONTAINERAPPS_ENVIRONMENT --resource-group $RESOURCE_GROUP \
+    --dapr-component-name statestore \
+    --yaml ./deployment/storage.local.yaml
+  
+az containerapp secret set --name $CONTAINERAPPSSERVER_NAME \
+                           --resource-group $RESOURCE_GROUP \
+                           --secrets account-key=$STORAGE_ACCOUNT_KEY
+
+#face server
+az containerapp create \
+  --image totosan/facedetectionapp:amd64-latest \
+  --name $CONTAINERAPPSSERVER_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --environment $CONTAINERAPPS_ENVIRONMENT \
+  --ingress external \
+  --target-port 8080 \
+  --transport http \
+  --min-replicas 1 \
+  --max-replicas 1 \
+  --cpu 2.0 \
+  --memory 4.0Gi \
+  --enable-dapr \
+  --dapr-app-port 8080 \
+  --dapr-app-id faceserver
+
+#face client
 az containerapp create \
   --image totosan/facedetection:amd64-latest \
   --name $CONTAINERAPPS_NAME \
@@ -16,7 +46,12 @@ az containerapp create \
   --ingress external\
   --target-port 8080\
   --cpu 2.0\
-  --memory 4.0Gi
+  --memory 4.0Gi \
+  --min-replicas 1 \
+  --max-replicas 1 \
+  --enable-dapr \
+  --dapr-app-port 8080 \
+  --dapr-app-id faceclient
 
 # after 5 min... vlt.
 LOG_ANALYTICS_WORKSPACE_CLIENT_ID=`az containerapp env show --name $CONTAINERAPPS_ENVIRONMENT --resource-group $RESOURCE_GROUP --query properties.appLogsConfiguration.logAnalyticsConfiguration.customerId --out tsv`
@@ -39,3 +74,11 @@ echo "Creating SP for RBAC with name $servicePrincipalName, with role $roleName 
 az ad sp create-for-rbac --name $servicePrincipalName --role $roleName \
 --scopes /subscriptions/$subscriptionID/resourceGroups/$RESOURCE_GROUP
 
+az storage account update \
+    --name $STORAGE_ACCOUNT \
+    --resource-group $RESOURCE_GROUP \
+    --allow-blob-public-access true
+
+
+# Testings
+curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"3\"}" https://facedetection-server.icydesert-bcfb11d6.westeurope.azurecontainerapps.io

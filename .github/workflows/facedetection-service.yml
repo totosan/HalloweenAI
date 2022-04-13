@@ -1,0 +1,123 @@
+name: Deploy face processing service
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'faceDetectApp/**'
+      - '!**/.yml'
+      
+  workflow_dispatch:
+
+jobs:
+  build-container:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [amd64]
+        
+    env:
+      VERS: "preview"
+      DOCKER_REPO: "totosan"
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+    - name: Login to docker.io
+      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PWD }}
+
+    - uses: satackey/action-docker-layer-caching@v0.0.11
+      # Ignore the failure of a step and avoid terminating the job.
+      continue-on-error: true
+      with:
+        key: facedetection-server-{hash}
+        restore-keys: |
+          facedetection-server-
+      
+    - name: prepare for x-build
+      if: ${{ matrix.architecture == 'arm64' }}
+      run: |
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        docker buildx create --name multiarch --driver docker-container --use
+        docker buildx inspect --bootstrap
+        
+    - name: Build the Docker image for amd64
+      if: ${{ matrix.architecture == 'amd64' }}
+      run: |
+        docker build . --file ./Dockers/FaceApp.Dockerfile --tag $DOCKER_REPO/facedetectionapp:${{ matrix.architecture }}-$VERS
+    - name: Build the Docker image for arm64
+      if: ${{ matrix.architecture == 'arm64' }}
+      run: |
+        docker buildx build --platform linux/arm64 -f ./Dockers/FaceApp.Dockerfile --tag $DOCKER_REPO/facedetectionapp:$ARCH-$VERS --load .
+    
+    - name: Push the image
+      run: |
+        docker push $DOCKER_REPO/facedetectionapp:${{ matrix.architecture }}-$VERS
+  
+  deploy-amd64-to-ACA:
+    needs: [build-container]
+    runs-on: ubuntu-latest
+    
+    env:
+      RESOURCE_GROUP: "MVPSession"
+      LOCATION: "westeurope"
+      CONTAINERAPPS_ENVIRONMENT: "ai-tt-env"
+      CONTAINERAPPSSERVER_NAME: "facedetection-server"
+      ARCH: "amd64"
+      VERS: "preview"
+      DOCKER_REPO: "totosan"
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        
+    - name: prepare AZ EXTENSION
+      run: az extension add --name containerapp
+
+    - name: create DAPR component (statestore)
+      run: ./deployment/createRedisYaml.sh > /dev/null
+
+    - name: create container app environment
+      if: ${{ env.ARCH == 'amd64' }}
+      run: |
+        az containerapp env create \
+        --name $CONTAINERAPPS_ENVIRONMENT \
+        --resource-group $RESOURCE_GROUP \
+        --location $LOCATION
+    
+    - name: enable DAPR
+      env:
+        REDIS_NAME: "facesink002"
+        SKU: "basic"
+        SIZE: "C0"
+        DAPR_SCOPE: "faceserver"
+      run: |
+        az containerapp env dapr-component set \
+            --name $CONTAINERAPPS_ENVIRONMENT \
+            --resource-group $RESOURCE_GROUP \
+            --dapr-component-name statestore \
+            --yaml ./deployment/redis.local.yaml
+
+    - name: create container app with image running
+      if: ${{ env.ARCH == 'amd64' }}
+      run: |
+        az containerapp create \
+          --image $DOCKER_REPO/facedetectionapp:${{ env.ARCH }}-$VERS \
+          --name $CONTAINERAPPSSERVER_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --environment $CONTAINERAPPS_ENVIRONMENT \
+          --ingress external \
+          --target-port 3500 \
+          --transport http \
+          --min-replicas 1 \
+          --max-replicas 10 \
+          --cpu 2.0 \
+          --memory 4.0Gi \
+          --enable-dapr \
+          --dapr-app-port 3500 \
+          --dapr-app-id faceserver
