@@ -61,15 +61,17 @@ jobs:
 #        sudo docker buildx create --name multiarch --driver docker-container --use
 #        sudo docker buildx inspect --bootstrap
     - name: if, build on Jetson Nano, take different Dockerfile
-      if: ${{ matrix.architecture == 'arm64' }}
       id: dockerfile
       run: |
-        if [ "${{ runner.arch }}" != "ARM64" ]; then
-          echo "::set-output name=filename::Dockerfile-arm64xbuild"
+        if [ "${{ matrix.architecture }}" == "arm64" ]; then
+          if [ "${{ runner.arch }}" != "ARM64" ]; then
+            echo "::set-output name=filename::Dockerfile-arm64xbuild"
+          else
+            echo "::set-output name=filename::Dockerfile-arm64"
+          fi
         else
-          echo "::set-output name=filename::Dockerfile-arm64"
-        fi
-
+          echo "::set-output name=filename::Dockerfile-${{ matrix.architecture }}"
+          
     - name: Build the Docker image
       run: |
         sudo docker build . --file ./Dockers/${{ steps.dockerfile.outputs.filename }} \
