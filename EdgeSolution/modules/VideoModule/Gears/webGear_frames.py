@@ -3,7 +3,7 @@ import os
 import uvicorn
 # import necessary libs
 import uvicorn, asyncio, cv2
-import utils
+import EdgeSolution.modules.VideoModule.utils as utils
 import mpipe
 import coils
 

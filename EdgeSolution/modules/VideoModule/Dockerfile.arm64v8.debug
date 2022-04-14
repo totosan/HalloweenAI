@@ -6,7 +6,6 @@ ARG DAPR_USED=False
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
-RUN ["cross-build-start"]
 RUN install_packages wget \
     cmake gfortran \
     build-essential unzip git \
@@ -21,13 +20,8 @@ RUN install_packages wget \
     v4l-utils libgoogle-glog-dev libgflags-dev libprotobuf-dev \
     protobuf-compiler 
 RUN python -m pip install --upgrade pip numpy==1.21.4
-#RUN cd /usr/local/lib/python3.10/site-packages/ && \
-#    ls -alh &&\
-#    ln -s /usr/lib/python3/dist-packages/cv2.cpython-39-arm-linux-gnueabihf.so ./cv2.so
-#RUN cd / 
 COPY . .
-RUN pip install -r requirements_AMD64.txt && \
-    pip install dapr --no-cache-dir
+RUN pip install -r requirements_ARM64.txt && \
+    pip install dapr ptvsd==4.1.3 --no-cache-dir
 EXPOSE 3500
 CMD [ "python", "main_gears.py" ]
-RUN ["cross-build-end"]

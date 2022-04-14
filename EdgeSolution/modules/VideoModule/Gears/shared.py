@@ -11,7 +11,7 @@ import mpipe
 import sharedmem
 
 import coils
-import utils
+import EdgeSolution.modules.VideoModule.utils as utils
 
 DEVICE   = "video.mp4"
 DURATION = 20.0  # In seconds.

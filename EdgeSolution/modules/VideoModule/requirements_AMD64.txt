@@ -1,16 +1,17 @@
+azure-iot-device~=2.7.0
 # ->Python3.9.4
-#opencv-contrib-python==4.5.3.56
+opencv-contrib-python==4.5.3.56
 asyncio==3.4.3
 netifaces==0.10.9
 #numpy
 requests
-#RPi.GPIO==0.7.0
 tornado==6.1
 urllib3==1.24.1
 azure-cognitiveservices-vision-face==0.5.0
 Pillow
-youtube-dl
-#scipy==1.7.2
+yt_dlp
+simplejpeg
+scipy==1.7.2
 imutils==0.5.4
 coils
 vidgear==0.2.4
@@ -19,3 +20,4 @@ uvicorn
 jinja2
 dlib==19.22.1
 pipe
+flask

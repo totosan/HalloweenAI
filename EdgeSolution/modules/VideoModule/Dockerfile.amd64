@@ -1,4 +1,4 @@
-FROM balenalib/aarch64-python:3.8-bullseye 
+FROM balenalib/amd64-python:3.8-bullseye 
 
 ARG VIDEO_PATH
 ARG DAPR_USED=False
@@ -23,5 +23,5 @@ RUN python -m pip install --upgrade pip numpy==1.21.4
 COPY . .
 RUN pip install -r requirements_AMD64.txt && \
     pip install dapr --no-cache-dir
-EXPOSE 3500
-CMD [ "python", "main_gears.py" ]
+
+CMD [ "python", "-u", "main_gears.py" ]

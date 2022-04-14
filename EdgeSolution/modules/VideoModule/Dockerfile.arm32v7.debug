@@ -1,4 +1,4 @@
-FROM balenalib/aarch64-ubuntu:bionic-build as opencv_numpy
+FROM balenalib/armv7hf-ubuntu:bionic-build as opencv_numpy
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG REPO_URL=https://github.com/skvark/opencv-python
 ARG BRANCH=master
@@ -12,7 +12,7 @@ ENV PYENV_ROOT $HOME/.pyenv
 ENV PYTHON_VERSION 3.9.5
 ENV ENABLE_CONTRIB ${ENABLE_CONTRIB}
 # modify make file to support multi process build
-ENV MAKEFLAGS="-j$(8)"
+ENV MAKEFLAGS="-j$(13)"
 
 #Enforces cross-compilation through Qemu
 RUN [ "cross-build-start" ]
@@ -51,6 +51,7 @@ ENV MAKEFLAGS="-j$(13)"
 
 #Enforces cross-compilation through Qemu
 RUN [ "cross-build-start" ]
+#COPY --from=opencv_numpy /code/opencv-python/*numpy*.whl .
 RUN install_packages \
     sudo \
     build-essential \
@@ -68,8 +69,8 @@ ENV LANG "C.UTF-8"
 ENV LC_ALL "C.UTF-8"
 ENV MAKEFLAGS="-j$(13)"
 
-COPY --from=opencv_numpy /code/opencv-python/*numpy*.whl .
 RUN [ "cross-build-start" ]
+COPY --from=opencv_numpy /code/opencv-python/*numpy*.whl .
 RUN install_packages \
     sudo \
     build-essential \
@@ -87,24 +88,32 @@ RUN pip3 wheel .
 RUN cp *.whl /
 RUN [ "cross-build-end" ]
 
-FROM balenalib/aarch64-ubuntu-python:3.9-bionic-run AS wheels_libs
-RUN [ "cross-build-start" ]
+FROM balenalib/armv7hf-ubuntu-python:3.9-bionic-run AS wheels_libs
 WORKDIR wheels
 COPY --from=opencv_numpy /code/opencv-python/*.whl /wheels/.
 COPY --from=dlib *.whl /wheels/.
 COPY --from=scipy *.whl /wheels/.
 COPY --from=opencv_numpy /usr/lib/arm-linux-gnueabihf/ /lib/
 COPY --from=scipy /usr/lib/arm-linux-gnueabihf/ /lib/
-RUN [ "cross-build-end" ]
 
 
-FROM balenalib/aarch64-ubuntu-python:3.9-bionic-run
-RUN [ "cross-build-start" ]
+FROM balenalib/armv7hf-ubuntu-python:3.9-bionic-run
+
+ARG VIDEO_PATH
+ARG DAPR_USED=False
+
+ENV VIDEO_PATH=$VIDEO_PATH
+ENV DAPR_USED=$DAPR_USED
+
+#COPY --from=opencv_numpy /usr/lib/arm-linux-gnueabihf/ /usr/lib/
+#COPY --from=scipy /usr/lib/arm-linux-gnueabihf/ /usr/lib/
 COPY --from=wheels_libs /lib/ /usr/lib/
 COPY --from=wheels_libs /wheels/*.whl .
 COPY . .
+RUN [ "cross-build-start" ]
+#RUN apt install libjpeg62 libatlas3-base libbsd0
 RUN /usr/local/bin/python3.9 -m pip install --upgrade pip
 RUN for wheel in *.whl; do pip install $wheel; done 
 RUN pip install  --no-cache-dir --find-links . -r requirements_RPI.txt --extra-index-url https://www.piwheels.org/simple 
-RUN pip install --no-cache-dir --find-links . scipy
-RUN [ "cross-build-end" ]
+RUN pip install --no-cache-dir --find-links . scipy ptvsd==4.1.3
+RUN ["cross-build-end"]
