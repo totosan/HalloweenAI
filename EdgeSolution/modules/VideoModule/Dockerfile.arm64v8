@@ -6,6 +6,7 @@ ARG DAPR_USED=False
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
+RUN ["cross-build-start"]
 RUN install_packages wget \
     cmake gfortran \
     build-essential unzip git \
@@ -21,7 +22,7 @@ RUN install_packages wget \
     protobuf-compiler 
 RUN python -m pip install --upgrade pip numpy==1.21.4
 COPY . .
-RUN pip install -r requirements_ARM64.txt && \
-    pip install dapr --no-cache-dir
+RUN pip install -r requirements_ARM64.txt
 EXPOSE 3500
 CMD [ "python", "main_gears.py" ]
+RUN ["cross-build-end"]
