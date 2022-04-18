@@ -6,24 +6,10 @@ ARG DAPR_USED=False
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
-RUN ["cross-build-start"]
-RUN install_packages wget \
-    cmake gfortran \
-    build-essential unzip git \
-    python3-all-dev \
-    libjpeg-dev libtiff-dev libgif-dev \
-    libavcodec-dev libavformat-dev libswscale-dev \
-    libgtk2.0-dev libcanberra-gtk* \
-    libxvidcore-dev libx264-dev libgtk-3-dev \
-     libtbb2 libtbb-dev libdc1394-22-dev libv4l-dev \
-    libopenblas-dev libatlas3-base libice6 libsm6 \
-     liblapack-dev libhdf5-dev \
-    v4l-utils libgoogle-glog-dev libgflags-dev libprotobuf-dev \
-    protobuf-compiler 
+#RUN ["cross-build-start"]
 RUN python -m pip install --upgrade pip numpy==1.21.4
 COPY . .
-RUN pip install -r requirements_ARM64.txt && \
-    pip install ptvsd==4.1.3 --no-cache-dir
+RUN pip install -r requirements_ARM64.txt
 EXPOSE 3500
 CMD [ "python", "main_gears.py" ]
-RUN ["cross-build-end"]
+#RUN ["cross-build-end"]

@@ -7,6 +7,7 @@ env3
 .env
 temp.jpg
 video.mp4
+.DS_Store
 
 # specific folder
 /hardware

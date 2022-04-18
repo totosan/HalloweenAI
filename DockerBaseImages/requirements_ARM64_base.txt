@@ -1,0 +1,14 @@
+asyncio==3.4.3
+netifaces==0.10.9
+requests
+tornado==6.1
+Pillow
+scipy==1.7.2
+imutils==0.5.4
+vidgear==0.2.4
+starlette
+uvicorn
+jinja2
+dlib==19.22.1
+pipe
+flask 
