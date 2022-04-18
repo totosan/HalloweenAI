@@ -1,4 +1,4 @@
-FROM balenalib/aarch64-python:3.8-bullseye 
+FROM totosan/arm64-python:3.8-web-science 
 
 ARG VIDEO_PATH
 ARG DAPR_USED=False
