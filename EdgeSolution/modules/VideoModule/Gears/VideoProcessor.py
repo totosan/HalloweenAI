@@ -36,10 +36,17 @@ CONFIDENCE = 0.3
 FRAME_DIST = 5
 shared = multiprocessing.Manager().dict()
 
+try:
+    import ptvsd
+    ptvsd.enable_attach(address=('localhost', 5678), redirect_output=True)
+except:
+    pass
+
 class VideoProcessor():
     
     def __init__(self, Detector) -> None:
         video_source = os.getenv("VIDEO_PATH","video.mp4")
+        print(f"Video source: {video_source}")
         streamMode = True if "youtu" in video_source else False
         self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3500)
         self.dapr_url = "http://localhost:{}/".format(self.dapr_port)

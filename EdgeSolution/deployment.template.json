@@ -58,65 +58,50 @@
         },
         "modules": {
           "VideoModule": {
-            "version": "1.0",
+            "version": "1.4",
             "type": "docker",
             "status": "running",
             "restartPolicy": "always",
             "settings": {
               "image": "${MODULES.VideoModule}",
-              "createOptions": {},
-              "HostConfig": {
-                "Devices": [
-                  {
-                    "PathOnHost": "/dev/video0",
-                    "PathInContainer": "/dev/video0",
-                    "CgroupPermissions": "rwm"
+              "createOptions": {
+                "Env": ["VIDEO_PATH=/dev/video0"],
+                "ExposedPorts": {
+                  "8080/tcp": {}
+                },
+                "HostConfig": {
+                  "Devices": [
+                    {
+                      "PathOnHost": "/dev/video0",
+                      "PathInContainer": "/dev/video0",
+                      "CgroupPermissions": "rwm"
+                    }
+                  ],
+                  "PortBindings": {
+                    "8080/tcp": [
+                      {
+                        "HostPort": "8080"
+                      }
+                    ]
                   }
-                ],
-                "PortBindings": {
-                  "5671/tcp": [
-                    {
-                      "HostPort": "5671"
-                    }
-                  ],
-                  "8883/tcp": [
-                    {
-                      "HostPort": "8883"
-                    }
-                  ],
-                  "443/tcp": [
-                    {
-                      "HostPort": "443"
-                    }
-                  ]
                 }
               }
-            }
-          },
-          "SimulatedTemperatureSensor": {
-            "version": "1.0",
-            "type": "docker",
-            "status": "running",
-            "restartPolicy": "always",
-            "settings": {
-              "image": "mcr.microsoft.com/azureiotedge-simulated-temperature-sensor:1.0",
-              "createOptions": {}
             }
           }
         }
       }
-    },
-    "$edgeHub": {
-      "properties.desired": {
-        "schemaVersion": "1.1",
-        "routes": {
-          "VideoModuleToIoTHub": "FROM /messages/modules/VideoModule/outputs/* INTO $upstream",
-          "sensorToVideoModule": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/VideoModule/inputs/input1\")"
-        },
-        "storeAndForwardConfiguration": {
-          "timeToLiveSecs": 7200
+      },
+      "$edgeHub": {
+        "properties.desired": {
+          "schemaVersion": "1.2",
+          "routes": {
+            "VideoModuleToIoTHub": "FROM /messages/modules/VideoModule/outputs/* INTO $upstream",
+            "sensorToVideoModule": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/VideoModule/inputs/input1\")"
+          },
+          "storeAndForwardConfiguration": {
+            "timeToLiveSecs": 7200
+          }
         }
       }
     }
   }
-}

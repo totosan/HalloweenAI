@@ -16,7 +16,7 @@ stop_event = threading.Event()
 
 
 def create_client():
-    client = IoTHubModuleClient.create_from_edge_environment()
+    client = IoTHubModuleClient.create_from_edge_environment(websockets=True)
 
     # Define function for handling received messages
     async def receive_message_handler(message):

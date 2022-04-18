@@ -6,9 +6,9 @@ ARG DAPR_USED=False
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
-RUN python -m pip install --upgrade pip numpy==1.21.4
+RUN python -m pip install --upgrade pip
 COPY . .
-RUN pip install -r requirements_AMD64.txt && \
-    pip install dapr --no-cache-dir
+RUN pip install -r requirements_AMD64.txt --no-cache-dir
+RUN pip install dapr --no-cache-dir --no-cache-dir
 
 CMD [ "python", "-u", "main_gears.py" ]

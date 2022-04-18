@@ -65,8 +65,10 @@
             "settings": {
               "image": "${MODULES.VideoModule.debug}",
               "createOptions": {
+                "Env":["VIDEO_PATH=https://youtu.be/LHrf6XzxuTM"],
                 "ExposedPorts": {
-                  "5678/tcp": {}
+                  "5678/tcp": {},
+                  "8080/tcp": {}
                 },
                 "HostConfig": {
                   "PortBindings": {
@@ -74,20 +76,15 @@
                       {
                         "HostPort": "5678"
                       }
+                    ],
+                    "8080/tcp": [
+                      {
+                        "HostPort": "8080"
+                      }
                     ]
                   }
                 }
               }
-            }
-          },
-          "SimulatedTemperatureSensor": {
-            "version": "1.0",
-            "type": "docker",
-            "status": "running",
-            "restartPolicy": "always",
-            "settings": {
-              "image": "mcr.microsoft.com/azureiotedge-simulated-temperature-sensor:1.0",
-              "createOptions": {}
             }
           }
         }
@@ -95,7 +92,7 @@
     },
     "$edgeHub": {
       "properties.desired": {
-        "schemaVersion": "1.1",
+        "schemaVersion": "1.2",
         "routes": {
           "VideoModuleToIoTHub": "FROM /messages/modules/VideoModule/outputs/* INTO $upstream",
           "sensorToVideoModule": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/VideoModule/inputs/input1\")"
