@@ -6,10 +6,10 @@ ARG DAPR_USED=False
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
-#RUN ["cross-build-start"]
+RUN ["cross-build-start"]
 RUN python -m pip install --upgrade pip numpy==1.21.4
 COPY . .
 RUN pip install -r requirements_ARM64.txt
 EXPOSE 3500
 CMD [ "python", "main_gears.py" ]
-#RUN ["cross-build-end"]
+RUN ["cross-build-end"]
