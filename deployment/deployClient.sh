@@ -34,9 +34,9 @@ echo "Create docker image & push to Docker.io"
 if [ -z "$(docker images -q totosan/facedetection:$ARCH-$VERS)" ]; then
     docker login -u totosan
 fi
-#docker build . -f ./Dockers/Dockerfile-$ARCH --build-arg VIDEO_PATH=$VIDEO_PATH -t totosan/facedetection:$ARCH-$VERS -t totosan/facedetection:$ARCH-latest
-#docker push totosan/facedetection:$ARCH-$VERS
-#docker push totosan/facedetection:$ARCH-latest
+docker build . -f ./Dockers/Dockerfile-$ARCH --build-arg VIDEO_PATH=$VIDEO_PATH -t totosan/facedetection:$ARCH-$VERS -t totosan/facedetection:$ARCH-latest
+docker push totosan/facedetection:$ARCH-$VERS
+docker push totosan/facedetection:$ARCH-latest
 
 #if containerapp already exists, delete it
 if [ $(az containerapp list -g $RESOURCE_GROUP -o table | grep $CONTAINERAPPS_NAME | wc -l) -gt 0 ]; then
@@ -45,6 +45,18 @@ if [ $(az containerapp list -g $RESOURCE_GROUP -o table | grep $CONTAINERAPPS_NA
     --name $CONTAINERAPPS_NAME \
     --image totosan/facedetection:$ARCH-$VERS
 else
+  #WSID=$(az monitor log-analytics workspace create \
+  #  -g $RESOURCE_GROUP \
+  #  -n $WORKSPACE_NAME \
+  #  --query "customerId" -o tsv)
+
+  az containerapp env create \
+    --name $CONTAINERAPPS_ENVIRONMENT \
+    --resource-group $RESOURCE_GROUP \
+    --location $LOCATION #\
+    #--logs-workspace-id $WSID \
+    #--logs-workspace-key $WORKSPACE_KEY
+
   #create container app
   az containerapp create \
     --image totosan/facedetection:$ARCH-latest \
@@ -60,4 +72,10 @@ else
     --enable-dapr \
     --dapr-app-port 8080 \
     --dapr-app-id faceclient
+
+    #WSID=`az monitor log-analytics workspace show --query customerId -g $RESOURCE_GROUP -n $LOG_ANALYTICS_WORKSPACE --out tsv`
+    #az monitor log-analytics query \
+    #--workspace $WSID \
+    #--analytics-query "ContainerAppConsoleLogs_CL | where ContainerAppName_s == 'my-container-app' | project ContainerAppName_s, Log_s, TimeGenerated | take 3" \
+    #--out table
 fi

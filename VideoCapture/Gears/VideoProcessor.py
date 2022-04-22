@@ -12,7 +12,6 @@ from Tracking.FaceDetector_cv2 import CONFIDENCE
 from Tracking.TrackingHelper import TrackingHelper
 from Tracking.TrackingHelper_multi import TrackingHelper_multi
 from Tracking.trackableobject import TrackableObject
-import dlib
 import coils
 from pipe import select, where # https://github.com/JulienPalard/Pipe
 
@@ -108,13 +107,18 @@ class VideoProcessor():
         self.correlationTrackers = []
         while shared['processStop'] == False:
             if not self.inputQ.empty() is True:
-                frame = self.inputQ.get_nowait()
-                # do detection part here
-                detections = self.detector.detect_multi(frame)                
-                objOfInterest = detections
-                if detections.any():
-                    self.outputQ.put_nowait(objOfInterest)
+                try:
+                    frame = self.inputQ.get_nowait()
+                    # do detection part here
+                    detections = self.detector.detect_multi(frame)                
+                    objOfInterest = detections
+                    if detections.any():
+                        self.outputQ.put_nowait(objOfInterest)
+                except Exception as e:
+                    print(e, flush=True)
+                    shared['processStop'] = True
 
+            
     def sendToFacesStore(self, id):
         message = {"id":f"{id}"}
         print(f"sending FaceId to service: {self.dapr_url}")
@@ -163,27 +167,32 @@ class VideoProcessor():
         global shared
         frameCnt = 0
         while shared['processStop'] == False:
-            # read un-stabilized frame
-            frame_org = self.stream_org.read()
+            try:
+                # read un-stabilized frame
+                frame_org = self.stream_org.read()
 
-            # put as input for face detection
-            if frameCnt % FRAME_DIST == 0 and self.inputQ.qsize() < 10:
-                self.inputQ.put_nowait(frame_org)
-                frameCnt = 0 if frameCnt == 100 else frameCnt
-            frameCnt = frameCnt + 1
+                # put as input for face detection
+                if frameCnt % FRAME_DIST == 0 and self.inputQ.qsize() < 10:
+                    self.inputQ.put_nowait(frame_org)
+                    frameCnt = 0 if frameCnt == 100 else frameCnt
+                frameCnt = frameCnt + 1
 
-            fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
-            cv2.putText(frame_org, fps_text, (20, 40),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
+                fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
+                cv2.putText(frame_org, fps_text, (20, 40),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
 
-            frame = self.addFacesIfExists(frame_org)
-            
-            print(f'InQ: {self.inputQ.qsize()} OutQ: {self.outputQ.qsize()}')
+                frame = self.addFacesIfExists(frame_org)
+                
+                #print(f'InQ: {self.inputQ.qsize()} OutQ: {self.outputQ.qsize()}')
 
-            # reducer frames size if you want more performance otherwise comment this line
-            frame = await reducer(frame, percentage=30)  # reduce frame by 30%
-            # handle JPEG encoding
-            encodedImage = cv2.imencode(".jpg", frame)[1].tobytes()
+                # reducer frames size if you want more performance otherwise comment this line
+                frame = await reducer(frame, percentage=30)  # reduce frame by 30%
+                # handle JPEG encoding
+                encodedImage = cv2.imencode(".jpg", frame)[1].tobytes()
 
-            # yield frame in byte format
-            yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
-            await asyncio.sleep(0.00001)  
+                # yield frame in byte format
+                yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
+                await asyncio.sleep(0.00001)  
+            except Exception as e:
+                print(e, flush=True)
+                shared['processStop'] = True
+                break
