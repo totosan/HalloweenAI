@@ -22,17 +22,30 @@ echo "**************************************************************************
 echo "Create docker image & push to Docker.io"
 echo "*******************************************************************************"
 #if not logged in to docker, login
-if [ -z "$(docker images -q totosan/facedetectionapp:$ARCH-$VERS)" ]; then
+if [ -z "$(docker images -q totosan/facedetectionapp:amd64-latest)" ]; then
     docker login -u totosan
 fi
 
 
 if [ $ARCH == "arm64" ]; then
-  docker buildx build --platform linux/$ARCH -f ./Dockers/FaceApp.Dockerfile -t totosan/facedetectionapp:$ARCH-$VERS -t totosan/facedetectionapp:$ARCH-latest --load .
+  docker buildx build \
+    --platform linux/$ARCH \
+    --build-arg FACE_API_KEY=$FACE_API_KEY \
+    --build-arg FACE_API_ENDPOINT=$FACE_API_ENDPOINT \
+    -f ./Dockers/FaceApp.Dockerfile \
+    -t totosan/facedetectionapp:$ARCH-$VERS \
+    -t totosan/facedetectionapp:$ARCH-latest \
+    --load \
+    .
   docker push totosan/facedetectionapp:$ARCH-$VERS && docker push totosan/facedetectionapp:$ARCH-latest
   exit 1
 else
-  docker build . -f ./Dockers/FaceApp.Dockerfile -t totosan/facedetectionapp:$ARCH-$VERS -t totosan/facedetectionapp:$ARCH-latest
+  docker build . \
+    -f ./Dockers/FaceApp.Dockerfile \
+    --build-arg FACE_API_KEY=$FACE_API_KEY \
+    --build-arg FACE_API_ENDPOINT=$FACE_API_ENDPOINT \
+    -t totosan/facedetectionapp:$ARCH-$VERS \
+    -t totosan/facedetectionapp:$ARCH-latest
   docker push totosan/facedetectionapp:$ARCH-$VERS && docker push totosan/facedetectionapp:$ARCH-latest
 fi
 
@@ -46,6 +59,10 @@ az containerapp env dapr-component set \
     --yaml ./deployment/redis.local.yaml
 
 #create container app
+if [ $VERS == "latest" ]; then
+    az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPSSERVER_NAME -y
+fi
+
 #if containerapp already exists, delete it
 if [ $(az containerapp list -g $RESOURCE_GROUP -o table | grep $CONTAINERAPPSSERVER_NAME | wc -l) -gt 0 ]; then
   echo "*******************************************************************************"

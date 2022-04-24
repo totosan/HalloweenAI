@@ -6,7 +6,9 @@ ARG DAPR_USED=False
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
-COPY ./VideoCapture/. .
+COPY ./src/VideoCapture/. ./VideoCapture/.
+COPY ./src/Tracking/. ./Tracking/.
+WORKDIR /VideoCapture
 RUN pip install -r requirements_AMD64.txt && \
     pip install dapr --no-cache-dir
 CMD [ "python", "main_gears.py" ]

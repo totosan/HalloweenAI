@@ -1,5 +1,12 @@
 # import required libraries
-from logging import currentframe
+import json
+import sys
+
+from flask import jsonify
+sys.path.append("./../Tracking/")
+for p in sys.path:
+    print(p)
+import logging
 import multiprocessing
 from multiprocessing.context import Process
 from multiprocessing.queues import Queue
@@ -23,6 +30,7 @@ from starlette.routing import Route
 
 import uvicorn, asyncio, cv2
 import requests
+from dapr.clients import DaprClient
 
 from Tracking.DetectionBase import DetectionBase
 from Tracking.centroidtracker import CentroidTracker
@@ -41,7 +49,7 @@ class VideoProcessor():
         video_source = os.getenv("VIDEO_PATH","video.mp4")
         streamMode = True if "youtu" in video_source else False
         self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3500)
-        self.dapr_url = "http://localhost:{}/".format(self.dapr_port)
+        self.dapr_url = os.getenv("DAPR_HTTP_URL","http://localhost:{}/").format(self.dapr_port)
         self.dapr_used = os.getenv("DAPR_USED", False)
 
         # various performance tweaks
@@ -117,18 +125,30 @@ class VideoProcessor():
                 except Exception as e:
                     print(e, flush=True)
                     shared['processStop'] = True
+                    logging.error(e)
 
             
-    def sendToFacesStore(self, id):
-        message = {"id":f"{id}"}
-        print(f"sending FaceId to service: {self.dapr_url}")
-        try:
-            response = requests.post(self.dapr_url, json=message, timeout=5, headers = {"dapr-app-id": "faceserver"} )
-            if not response.ok:
-                print("HTTP %d => %s" % (response.status_code,
-                                        response.content.decode("utf-8")), flush=True)
-        except Exception as e:
-            print(e, flush=True)
+    def __getObjectDetails__(self, frame, clipregion, id):
+        x = int(clipregion[0]-15.0)
+        y = int(clipregion[1]-15.0)
+        x2 = int(clipregion[2]+15.0)
+        y2 = int(clipregion[3]+15.0)
+
+        result = None
+        clippedImage = frame[y:y2, x:x2].copy()
+        if clippedImage.any():
+            cropped = cv2.imencode('.jpg', clippedImage)[1].tobytes()
+            try:
+                response = requests.post(url=self.dapr_url, files={'imageData':cropped}, data={"id":f"{id}"}, timeout=5, headers = {"dapr-app-id": "faceserver"} )
+                if not response.ok:
+                    print("HTTP %d => %s" % (response.status_code, response.content.decode("utf-8")), flush=True)
+                else:
+                    result = json.loads(response.text)['gender']
+            except Exception as e:
+                print("Error sending image to service", flush=True)
+                logging.error(e, exc_info=True)
+                
+        return result
 
     def addFacesIfExists(self, frame):
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -149,18 +169,23 @@ class VideoProcessor():
 
         for (objId, centroidItem) in trackedCentroidItems.items():
             trackedIdObj = self.trackableIDs.get(objId,None)
+            gender = ""
             if trackedIdObj is None and self.dapr_used:
                 print(f"New face detected: {objId}")
-                self.sendToFacesStore(objId)
+                result = self.__getObjectDetails__(frame, centroidItem.rect, objId)
+                if result is not None:
+                    gender = result
+                    centroidItem.class_type = gender
+
             trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
             self.trackableIDs[objId] = trackedIdObj
 
-            text = "ID {}".format(objId)
+            text = f"ID {objId} - {centroidItem.class_type}"
             DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
             DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
             DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
 
-        print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
+        #print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
 
     async def generateFrames(self):
@@ -193,6 +218,6 @@ class VideoProcessor():
                 yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
                 await asyncio.sleep(0.00001)  
             except Exception as e:
-                print(e, flush=True)
+                logging.error(e, exc_info=True)
                 shared['processStop'] = True
                 break

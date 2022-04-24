@@ -5,11 +5,28 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Videostream",
+      "name": "Python: Current File",
       "type": "python",
       "request": "launch",
-      "program": "./main_gears.py",
-      "console": "integratedTerminal"
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Remote server",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/src/faceInstanceApp/",
+          "remoteRoot": "\\src\\faceInstanceApp\\"
+        }
+      ],
+      "justMyCode": true
     }
   ]
 }

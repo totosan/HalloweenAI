@@ -9,6 +9,7 @@ temp.jpg
 video.mp4
 
 # specific folder
-/hardware
-*.local.*
-faceInstanceApp/readCache.py
+**/hardware
+**/*.local.*
+**/readCache.py
+*/tests/*

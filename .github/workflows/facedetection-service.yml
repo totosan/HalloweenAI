@@ -47,11 +47,21 @@ jobs:
     - name: Build the Docker image for amd64
       if: ${{ matrix.architecture == 'amd64' }}
       run: |
-        docker build . --file ./Dockers/FaceApp.Dockerfile --tag $DOCKER_REPO/facedetectionapp:${{ matrix.architecture }}-$VERS
+        docker build . \
+          --file ./Dockers/FaceApp.Dockerfile \
+          --build-arg FACE_API_KEY=$FACE_API_KEY \
+          --build-arg FACE_API_ENDPOINT=$FACE_API_ENDPOINT \
+          --tag $DOCKER_REPO/facedetectionapp:${{ matrix.architecture }}-$VERS
     - name: Build the Docker image for arm64
       if: ${{ matrix.architecture == 'arm64' }}
       run: |
-        docker buildx build --platform linux/arm64 -f ./Dockers/FaceApp.Dockerfile --tag $DOCKER_REPO/facedetectionapp:$ARCH-$VERS --load .
+        docker buildx build \
+          --platform linux/arm64 \
+          --file ./Dockers/FaceApp.Dockerfile \
+          --build-arg FACE_API_KEY=$FACE_API_KEY \
+          --build-arg FACE_API_ENDPOINT=$FACE_API_ENDPOINT \
+          --tag $DOCKER_REPO/facedetectionapp:$ARCH-$VERS \
+          --load .
     
     - name: Push the image
       run: |

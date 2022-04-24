@@ -1,0 +1,8 @@
+flask
+dapr
+Pillow
+requests
+numpy
+opencv-contrib-python==4.5.3.56
+azure-cognitiveservices-vision-face==0.5.0
+flask-dapr
