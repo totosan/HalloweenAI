@@ -5,7 +5,7 @@ netifaces==0.10.9
 #numpy
 requests
 tornado==6.1
-urllib3==1.24.1
+urllib3==1.26.5
 azure-cognitiveservices-vision-face==0.5.0
 Pillow
 yt_dlp
