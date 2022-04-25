@@ -87,5 +87,19 @@ def faceCallApi():
         print('EXCEPTION:', str(e))
         return 'Error processing image', 500
         
+import signal
+import time
 
-app.run(host="0.0.0.0",port=dapr_port)    
+class GracefulKiller:
+  kill_now = False
+  def __init__(self, appToKill):
+    self.appToKill = appToKill
+    signal.signal(signal.SIGINT, self.exit_gracefully)
+    signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+  def exit_gracefully(self, *args):
+    self.kill_now = True
+    
+#killer = GracefulKiller()
+
+#app.run(port=dapr_port)
