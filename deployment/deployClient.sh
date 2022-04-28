@@ -43,13 +43,12 @@ if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT
   #  -g $RESOURCE_GROUP \
   #  -n $WORKSPACE_NAME \
   #  --query "customerId" -o tsv)
-
   az containerapp env create \
     --name $CONTAINERAPPS_ENVIRONMENT \
     --resource-group $RESOURCE_GROUP \
-    --location $LOCATION #\
-    #--logs-workspace-id $WSID \
-    #--logs-workspace-key $WORKSPACE_KEY
+    --location $LOCATION \
+    --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \
+    --logs-workspace-key $WSKEY
 fi
 
 if [ $VERS == "latest" ]; then

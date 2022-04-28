@@ -13,7 +13,7 @@
       "justMyCode": true
     },
     {
-      "name": "Python: Remote server",
+      "name": "Remote server",
       "type": "python",
       "request": "attach",
       "connect": {
@@ -24,6 +24,22 @@
         {
           "localRoot": "${workspaceFolder}/src/faceInstanceApp/",
           "remoteRoot": "\\src\\faceInstanceApp\\"
+        }
+      ],
+      "justMyCode": true
+    },
+    {
+      "name": "Remote app",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/src/VideoCapture/",
+          "remoteRoot": "\\src\\VideoCapture\\"
         }
       ],
       "justMyCode": true

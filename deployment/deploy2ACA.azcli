@@ -55,6 +55,8 @@ az containerapp create \
 
 # after 5 min... vlt.
 LOG_ANALYTICS_WORKSPACE_CLIENT_ID=`az containerapp env show --name $CONTAINERAPPS_ENVIRONMENT --resource-group $RESOURCE_GROUP --query properties.appLogsConfiguration.logAnalyticsConfiguration.customerId --out tsv`
+WS_NAME=`az monitor log-analytics workspace list -g $RESOURCE_GROUP --query "[?customerId=='$LOG_ANALYTICS_WORKSPACE_CLIENT_ID'].name" -o tsv`
+KEY=`az monitor log-analytics workspace get-shared-keys -g $RESOURCE_GROUP -n workspace-essionJJ04 --query "primarySharedKey" -o tsv`
 
 az monitor log-analytics query \
   --workspace $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \

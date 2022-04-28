@@ -82,7 +82,7 @@ class FaceDetection(DetectionBase):
                 frame = cv2.rectangle(frame, start,end, (255, 0 , 0), thickness=2)
 
         returnValue=None
-        if detected_faces is not None:
+        if detected_faces is not None and len(detected_faces)>0:
             if len(detected_faces)>1:
                 print('Expected one face, but got {}.'.format(len(detected_faces)))
             returnValue = detected_faces[0]
