@@ -1,8 +1,8 @@
 # import required libraries
 import sys
 sys.path.append("./../Tracking/")
-for p in sys.path:
-    print(p)
+
+import os
 import logging
 from applicationinsights.logging import LoggingHandler
 handler = LoggingHandler(os.getenv('APP_INSIGHTS_KEY',''))
@@ -11,7 +11,6 @@ logging.basicConfig(handlers=[ handler ], format='%(levelname)s: %(message)s', l
 
 import multiprocessing
 from multiprocessing.context import Process
-import os
 import cv2
 from Tracking.CentroidItem import CentroidItem
 from Tracking.TrackingHelper import TrackingHelper
