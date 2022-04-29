@@ -8,7 +8,7 @@ from applicationinsights.logging import LoggingHandler
 handler = LoggingHandler(os.getenv('APP_INSIGHTS_KEY',''))
 logging.basicConfig(handlers=[ handler ], format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
-
+from json import dumps, loads
 import multiprocessing
 from multiprocessing.context import Process
 import cv2
@@ -57,6 +57,7 @@ class VideoProcessor():
         print(f'* Streaming: {streamMode}')
         print(f'* Config: {self.options}')
         print("**************************")
+        logging.debug(dumps({'Video': video_source, 'Streaming': streamMode, 'Config': self.options}))
 
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=25).start()
         self.web_stream = WebGear(logging=True, **self.options)
