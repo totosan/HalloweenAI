@@ -49,7 +49,6 @@ else
   docker push totosan/facedetectionapp:$ARCH-$VERS && docker push totosan/facedetectionapp:$ARCH-latest
 fi
 
-
 echo "*******************************************************************************"
 echo " Update Container Apps environment"
 echo "*******************************************************************************"
@@ -85,7 +84,7 @@ echo "**************************************************************************
     --target-port 3500 \
     --transport http \
     --min-replicas 1 \
-    --max-replicas 1 \
+    --max-replicas 10 \
     --cpu 2.0 \
     --memory 4.0Gi \
     --enable-dapr \

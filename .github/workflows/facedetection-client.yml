@@ -98,7 +98,9 @@ jobs:
         az containerapp env create \
         --name $CONTAINERAPPS_ENVIRONMENT \
         --resource-group $RESOURCE_GROUP \
-        --location $LOCATION
+        --location $LOCATION \
+        --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \
+        --logs-workspace-key $WSKEY
 
     - name: create container app with image running
       if: ${{ env.ARCH == 'amd64' }}

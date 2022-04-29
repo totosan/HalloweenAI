@@ -21,4 +21,5 @@ az containerapp revision restart --revision facedetection-app --resource-group M
 
 
 # getting last used version of facedetection
-docker images | grep -v facedetectionapp | grep amd | awk '{print $2}' | sort | tail -n1
+alias lastFaceAppVersion=`docker images | grep -v facedetectionapp | grep amd | awk '{print $2}' | sort | tail -n1 | cut -d '-' -f2`
+alias lastFaceServerVersion=`docker images | grep facedetectionapp | grep amd | awk '{print $2}' | sort | tail -n1 | cut -d '-' -f2`

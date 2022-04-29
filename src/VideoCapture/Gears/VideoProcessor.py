@@ -1,36 +1,25 @@
 # import required libraries
-import json
 import sys
-
-from flask import jsonify
 sys.path.append("./../Tracking/")
 for p in sys.path:
     print(p)
 import logging
 import multiprocessing
 from multiprocessing.context import Process
-from multiprocessing.queues import Queue
 import os
-from time import sleep
 import cv2
-from numpy import string_
 from Tracking.CentroidItem import CentroidItem
-from Tracking.FaceDetector_cv2 import CONFIDENCE
 from Tracking.TrackingHelper import TrackingHelper
-from Tracking.TrackingHelper_multi import TrackingHelper_multi
-from Tracking.trackableobject import TrackableObject
 import coils
 from pipe import select, where # https://github.com/JulienPalard/Pipe
 
 from vidgear.gears import VideoGear
 from vidgear.gears.asyncio import WebGear
 from vidgear.gears.asyncio.helper import reducer
-from starlette.responses import StreamingResponse
-from starlette.routing import Route
 
 import uvicorn, asyncio, cv2
-import requests
-from dapr.clients import DaprClient
+import aiohttp
+import asyncio
 
 from Tracking.DetectionBase import DetectionBase
 from Tracking.centroidtracker import CentroidTracker
@@ -128,63 +117,72 @@ class VideoProcessor():
                     logging.error(e)
 
             
-    def __getObjectDetails__(self, frame, clipregion, id):
+    async def __getObjectDetails__(self, frame, clipregion, id):
         x = int(clipregion[0]-15.0)
         y = int(clipregion[1]-15.0)
         x2 = int(clipregion[2]+15.0)
         y2 = int(clipregion[3]+15.0)
 
-        result = None
+        result = {'gender':None}
         clippedImage = frame[y:y2, x:x2].copy()
         if clippedImage.any():
             cropped = cv2.imencode('.jpg', clippedImage)[1].tobytes()
             try:
-                response = requests.post(url=self.dapr_url, files={'imageData':cropped}, data={"id":f"{id}"}, timeout=5, headers = {"dapr-app-id": "faceserver"} )
-                if not response.ok:
-                    print("HTTP %d => %s" % (response.status_code, response.content.decode("utf-8")), flush=True)
-                else:
-                    result = json.loads(response.text)['gender']
+                async with aiohttp.ClientSession() as session:
+                    data = aiohttp.FormData()
+                    data.add_field('imageData', cropped, filename='image.jpg')
+                    data.add_field('id',f"{id}")
+                    async with session.post(self.dapr_url , data=data, timeout=5, headers = {"dapr-app-id": "faceserver"}) as resp:
+                        jsonResponse = await resp.json()
+                        if jsonResponse not in [None, {}]:
+                            result = jsonResponse
+
             except Exception as e:
                 print("Error sending image to service", flush=True)
                 logging.error(e, exc_info=True)
+                raise e
                 
-        return result
+        return result['gender']
 
-    def addFacesIfExists(self, frame):
+    async def addFacesIfExists(self, frame):
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         detectedFacesRects = []
         
-        # create or update face tracker 
-        if not self.outputQ.empty() is True:
-            faces = self.outputQ.get_nowait()
-            detectedFacesRects = DetectionHelper.getBoundingBoxesFromDetections(faces,frame)
-            detectedFacesRects = [val.astype("int") for val in detectedFacesRects] # move to centroidItem.rect
-            self.trackingManager.createTrackers(detectedFacesRects,rgb)
-        else :
-            detectedFacesRects = self.trackingManager.updateTrackers(rgb)
+        try:
+            # create or update face tracker 
+            if not self.outputQ.empty() is True:
+                faces = self.outputQ.get_nowait()
+                detectedFacesRects = DetectionHelper.getBoundingBoxesFromDetections(faces,frame)
+                detectedFacesRects = [val.astype("int") for val in detectedFacesRects] # move to centroidItem.rect
+                self.trackingManager.createTrackers(detectedFacesRects,rgb)
+            else :
+                detectedFacesRects = self.trackingManager.updateTrackers(rgb)
 
-        # add IDs to tracked regions
-        centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
-        trackedCentroidItems = self.centroids.update(centroidItems)
+            # add IDs to tracked regions
+            centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
+            trackedCentroidItems = self.centroids.update(centroidItems)
 
-        for (objId, centroidItem) in trackedCentroidItems.items():
-            trackedIdObj = self.trackableIDs.get(objId,None)
-            gender = ""
-            if trackedIdObj is None and self.dapr_used:
-                print(f"New face detected: {objId}")
-                result = self.__getObjectDetails__(frame, centroidItem.rect, objId)
-                if result is not None:
-                    gender = result
-                    centroidItem.class_type = gender
+            for (objId, centroidItem) in trackedCentroidItems.items():
+                trackedIdObj = self.trackableIDs.get(objId,None)
+                gender = ""
+                if trackedIdObj is None and self.dapr_used:
+                    print(f"New face detected: {objId}")
+                    result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
+                    if result is not None and result != "":
+                        gender = result
+                        centroidItem.class_type = gender
 
-            trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
-            self.trackableIDs[objId] = trackedIdObj
+                trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
+                self.trackableIDs[objId] = trackedIdObj
 
-            text = f"ID {objId} - {centroidItem.class_type}"
-            DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
-            DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
-            DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
-
+                text = f"ID {objId} - {centroidItem.class_type}"
+                DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
+                DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
+                DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
+        except Exception as e:
+            print(e, flush=True)
+            logging.error(e)
+            raise e
         #print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
 
@@ -205,7 +203,7 @@ class VideoProcessor():
                 fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
                 cv2.putText(frame_org, fps_text, (20, 40),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
 
-                frame = self.addFacesIfExists(frame_org)
+                frame = await self.addFacesIfExists(frame_org)
                 
                 #print(f'InQ: {self.inputQ.qsize()} OutQ: {self.outputQ.qsize()}')
 

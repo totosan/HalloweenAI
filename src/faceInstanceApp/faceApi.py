@@ -41,7 +41,6 @@ def sendToStateStore(img, payload):
         # Convert RGB to BGR 
         open_cv_image = open_cv_image[:, :, ::-1].copy() 
         h,w = open_cv_image.shape[:2]
-        
         detection = detector.detect_single(open_cv_image)
         faceId = None
         gender = None
@@ -54,11 +53,12 @@ def sendToStateStore(img, payload):
         encoded = shape + open_cv_image.tobytes()
         
         values={'face_id':faceId, 'gender':gender, 'img':bytes.decode(encoded, encoding="ISO-8859-1")}
-        with DaprClient() as d:
-            # Save state
-            print(f"sending FaceId to storage")
-            jsonValues = json.dumps(values)
-            d.save_state(store_name="statestore", key=str(payload), value=jsonValues)
+        if True:
+            with DaprClient() as d:
+                # Save state
+                print(f"sending FaceId to storage")
+                jsonValues = json.dumps(values)
+                d.save_state(store_name="statestore", key=str(payload), value=jsonValues)
         return {'faceId':faceId, 'gender':gender}
     except Exception as e:
         logging.error(f"{e}")
@@ -74,6 +74,10 @@ def faceCallApi():
             imageData = request.files['imageData']
             payload = request.form["id"]
             print (payload)
+        elif ('imageData' in request.form):
+            imageData = request.form['imageData']
+            payload = request.form["id"]
+            print (payload)
         else:
             imageData = io.BytesIO(request.get_data())
             print("From get_data")
@@ -87,5 +91,19 @@ def faceCallApi():
         print('EXCEPTION:', str(e))
         return 'Error processing image', 500
         
+import signal
+import time
 
-app.run(host="0.0.0.0",port=dapr_port)    
+class GracefulKiller:
+  kill_now = False
+  def __init__(self, appToKill):
+    self.appToKill = appToKill
+    signal.signal(signal.SIGINT, self.exit_gracefully)
+    signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+  def exit_gracefully(self, *args):
+    self.kill_now = True
+    
+#killer = GracefulKiller()
+
+#app.run(port=dapr_port)

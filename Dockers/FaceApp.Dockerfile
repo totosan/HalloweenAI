@@ -10,6 +10,4 @@ COPY ./src/faceInstanceApp ./faceInstanceApp/.
 COPY ./src/Tracking/. ./Tracking/.
 WORKDIR /faceInstanceApp
 RUN pip install -r requirements_AMD64.txt --no-cache-dir
-ENV FLASK_APP=faceApi 
-EXPOSE 3500
-CMD [ "python", "faceApi.py" ]
+CMD [ "gunicorn", "--bind", "0.0.0.0:3500", "wsgi:app" ]
