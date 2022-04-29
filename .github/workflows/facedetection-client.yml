@@ -91,7 +91,7 @@ jobs:
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp env create \
-        --dapr-instrumentation-key = ${{ secrets.APP_INSIGHTS_KEY }} \
+        --dapr-instrumentation-key ${{ secrets.APP_INSIGHTS_KEY }} \
         --name $CONTAINERAPPS_ENVIRONMENT \
         --resource-group $RESOURCE_GROUP \
         --location $LOCATION \
