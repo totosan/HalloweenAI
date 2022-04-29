@@ -139,8 +139,7 @@ class VideoProcessor():
 
             except Exception as e:
                 print("Error sending image to service", flush=True)
-                logging.error(e, exc_info=True)
-                raise e
+                logging.exception("Failed to detect gender")
                 
         return result['gender']
 
