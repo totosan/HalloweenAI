@@ -4,6 +4,11 @@ sys.path.append("./../Tracking/")
 for p in sys.path:
     print(p)
 import logging
+from applicationinsights.logging import LoggingHandler
+handler = LoggingHandler(os.getenv('APP_INSIGHTS_KEY',''))
+logging.basicConfig(handlers=[ handler ], format='%(levelname)s: %(message)s', level=logging.DEBUG)
+
+
 import multiprocessing
 from multiprocessing.context import Process
 import os
@@ -180,8 +185,8 @@ class VideoProcessor():
                 DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
         except Exception as e:
-            print(e, flush=True)
-            logging.error(e)
+            print(e)
+            logging.exception('Failed to add faces')
             raise e
         #print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
