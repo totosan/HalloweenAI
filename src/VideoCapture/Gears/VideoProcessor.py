@@ -134,6 +134,7 @@ class VideoProcessor():
                     data.add_field('id',f"{id}")
                     async with session.post(self.dapr_url , data=data, timeout=5, headers = {"dapr-app-id": "faceserver"}) as resp:
                         jsonResponse = await resp.json()
+                        logging.info(jsonResponse)
                         if jsonResponse not in [None, {}]:
                             result = jsonResponse
 
