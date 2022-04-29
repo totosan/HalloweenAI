@@ -44,6 +44,7 @@ if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT
   #  -n $WORKSPACE_NAME \
   #  --query "customerId" -o tsv)
   az containerapp env create \
+    --dapr-instrumentation-key = $APP_INSIGHTS_KEY \
     --name $CONTAINERAPPS_ENVIRONMENT \
     --resource-group $RESOURCE_GROUP \
     --location $LOCATION \
