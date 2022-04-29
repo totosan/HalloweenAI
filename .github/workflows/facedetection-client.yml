@@ -34,7 +34,6 @@ jobs:
       CONTAINERAPPS_ENVIRONMENT: "ai-tt-env"
       CONTAINERAPPS_NAME: "facedetection-app"
       CONTAINERAPPSSERVER_NAME: "facedetection-server"
-      APP_INSIGHTS_KEY: ${{ secrets.APP_INSIGHTS_KEY }}
 
     steps:
     - uses: actions/checkout@v3
@@ -92,7 +91,7 @@ jobs:
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp env create \
-        --dapr-instrumentation-key = $APP_INSIGHTS_KEY \
+        --dapr-instrumentation-key = ${{ secrets.APP_INSIGHTS_KEY }} \
         --name $CONTAINERAPPS_ENVIRONMENT \
         --resource-group $RESOURCE_GROUP \
         --location $LOCATION \
