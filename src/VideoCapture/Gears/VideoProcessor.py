@@ -18,7 +18,6 @@ from vidgear.gears.asyncio import WebGear
 from vidgear.gears.asyncio.helper import reducer
 
 import uvicorn, asyncio, cv2
-import aiohttp
 import asyncio
 
 from Tracking.DetectionBase import DetectionBase
@@ -27,12 +26,6 @@ from Tracking.gfx.DetectionHelper import DetectionHelper
 from VideoCapture.MultiProcessingLog import MultiProcessingLog
 
 import logging
-from applicationinsights.logging import LoggingHandler
-appinsightkey = os.getenv("APP_INSIGHTS_KEY","")
-handler = LoggingHandler(appinsightkey)
-mpLog = MultiProcessingLog(appinsightkey)
-logging.basicConfig(handlers=[ mpLog ], format='%(levelname)s: %(message)s',level=logging.ERROR)
-
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
