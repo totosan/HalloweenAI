@@ -73,7 +73,6 @@ jobs:
         docker build . --file ./Dockers/${{ steps.dockerfile.outputs.filename }} \
         --build-arg VIDEO_PATH=$VIDEO_PATH \
         --build-arg DAPR_USED=$DAPR_USED \
-        --build-arg APP_INSIGHTS_KEY=${{ secrets.APP_INSIGHTS_KEY }} \
         --tag $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview 
     - name: Push the image
       run: |
@@ -107,6 +106,8 @@ jobs:
           --name $CONTAINERAPPS_NAME \
           --resource-group $RESOURCE_GROUP \
           --environment $CONTAINERAPPS_ENVIRONMENT \
+          --secrets "app-insight-key=$APP_INSIGHTS_KEY" \
+          --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
           --ingress external\
           --target-port 8080\
           --cpu 2.0\
