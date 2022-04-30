@@ -21,3 +21,4 @@ dlib==19.22.1
 pipe
 flask
 applicationinsights
+opencensus-ext-azure

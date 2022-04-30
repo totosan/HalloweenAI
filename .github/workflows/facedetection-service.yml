@@ -91,16 +91,8 @@ jobs:
 
     - name: create DAPR component (statestore)
       run: ./deployment/createRedisYaml.sh > /dev/null
-
-    - name: create container app environment
-      if: ${{ env.ARCH == 'amd64' }}
-      run: |
-        az containerapp env create \
-        --name $CONTAINERAPPS_ENVIRONMENT \
-        --resource-group $RESOURCE_GROUP \
-        --location $LOCATION
-    
-    - name: enable DAPR
+   
+    - name: enable DAPR in ENVironment
       env:
         REDIS_NAME: "facesink002"
         SKU: "basic"
@@ -113,7 +105,7 @@ jobs:
             --dapr-component-name statestore \
             --yaml ./deployment/redis.local.yaml
 
-    - name: create container app with image running
+    - name: create container app
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp create \

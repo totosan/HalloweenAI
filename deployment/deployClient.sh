@@ -4,6 +4,7 @@ set -e
 ARCH=amd64
 VERS="v1.0"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
+DAPR_USED=False
 
 #override ARCH with input, if not empty
 if [ ! -z "$2" ]; then
@@ -30,21 +31,23 @@ echo "* Docker Image: totosan/facedetection:$ARCH-$VERS"
 echo "*******************************************************************************"
 
 echo "Create docker image & push to Docker.io"
-#if not logged in to docker, login
-if [ -z "$(docker images -q totosan/facedetection:$ARCH-$VERS)" ]; then
-    docker login -u totosan
-fi
-docker build . -f ./Dockers/Dockerfile-$ARCH --build-arg VIDEO_PATH=$VIDEO_PATH -t totosan/facedetection:$ARCH-$VERS -t totosan/facedetection:$ARCH-latest
+
+docker build . --file ./Dockers/Dockerfile-$ARCH \
+--build-arg VIDEO_PATH=$VIDEO_PATH \
+--build-arg DAPR_USED=$DAPR_USED \
+--build-arg APP_INSIGHTS_KEY=$APP_INSIGHTS_KEY \
+--build-arg TEST=False \
+--tag totosan/facedetection:$ARCH-$VERS \
+--tag totosan/facedetection:$ARCH-latest
 docker push totosan/facedetection:$ARCH-$VERS
 docker push totosan/facedetection:$ARCH-latest
 
+# Deployment here #######################################
+echo wait 5 seconds
+sleep 5
 if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT --query "name" | wc -l) -eq 0 ]; then
-  #WSID=$(az monitor log-analytics workspace create \
-  #  -g $RESOURCE_GROUP \
-  #  -n $WORKSPACE_NAME \
-  #  --query "customerId" -o tsv)
   az containerapp env create \
-    --dapr-instrumentation-key = $APP_INSIGHTS_KEY \
+    --dapr-instrumentation-key $APP_INSIGHTS_KEY \
     --name $CONTAINERAPPS_ENVIRONMENT \
     --resource-group $RESOURCE_GROUP \
     --location $LOCATION \
@@ -70,6 +73,8 @@ else
     --name $CONTAINERAPPS_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
+    --secrets "app-insight-key=$APP_INSIGHTS_KEY" \
+    --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
     --ingress external\
     --target-port 8080\
     --cpu 2.0\

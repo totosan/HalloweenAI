@@ -88,7 +88,7 @@ jobs:
       if: ${{ env.ARCH == 'amd64' }}
       run: az extension add --name containerapp
 
-    - name: create container app environment
+    - name: create CONTAINER APP ENVironment
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp env create \
@@ -99,7 +99,7 @@ jobs:
         --logs-workspace-id ${{ secrets.LOG_ANALYTICS_WORKSPACE_CLIENT_ID }} \
         --logs-workspace-key ${{ secrets.WSKEY }}
 
-    - name: create container app with image running
+    - name: create CONTAINER APP with image running
       if: ${{ env.ARCH == 'amd64' }}
       run: |
         az containerapp create \
@@ -107,7 +107,6 @@ jobs:
           --name $CONTAINERAPPS_NAME \
           --resource-group $RESOURCE_GROUP \
           --environment $CONTAINERAPPS_ENVIRONMENT \
-          --env-vars DAPR_USED=False \
           --ingress external\
           --target-port 8080\
           --cpu 2.0\

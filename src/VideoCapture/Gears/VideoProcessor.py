@@ -3,10 +3,6 @@ import sys
 sys.path.append("./../Tracking/")
 
 import os
-import logging
-from applicationinsights.logging import LoggingHandler
-handler = LoggingHandler(os.getenv('APP_INSIGHTS_KEY',''))
-logging.basicConfig(handlers=[ handler ], format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 from json import dumps, loads
 import multiprocessing
@@ -28,6 +24,15 @@ import asyncio
 from Tracking.DetectionBase import DetectionBase
 from Tracking.centroidtracker import CentroidTracker
 from Tracking.gfx.DetectionHelper import DetectionHelper
+from VideoCapture.MultiProcessingLog import MultiProcessingLog
+
+import logging
+from applicationinsights.logging import LoggingHandler
+appinsightkey = os.getenv("APP_INSIGHTS_KEY","")
+handler = LoggingHandler(appinsightkey)
+mpLog = MultiProcessingLog(appinsightkey)
+logging.basicConfig(handlers=[ mpLog ], format='%(levelname)s: %(message)s',level=logging.ERROR)
+
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
@@ -57,10 +62,14 @@ class VideoProcessor():
         print(f'* Streaming: {streamMode}')
         print(f'* Config: {self.options}')
         print("**************************")
-        logging.debug(dumps({'Video': video_source, 'Streaming': streamMode, 'Config': self.options}))
+        logging.info(dumps({'Video': video_source,
+                            'Streaming': streamMode,
+                            'Config': self.options,
+                            'DaprUsed': self.dapr_used,
+                            'DaprUrl': self.dapr_url}))
 
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=25).start()
-        self.web_stream = WebGear(logging=True, **self.options)
+        self.web_stream = WebGear(logging=False, **self.options)
 
         # add your custom frame producer to config
         self.web_stream.config["generator"] = self.generateFrames
@@ -123,31 +132,41 @@ class VideoProcessor():
 
             
     async def __getObjectDetails__(self, frame, clipregion, id):
+
         x = int(clipregion[0]-15.0)
         y = int(clipregion[1]-15.0)
         x2 = int(clipregion[2]+15.0)
         y2 = int(clipregion[3]+15.0)
 
-        result = {'gender':None}
-        clippedImage = frame[y:y2, x:x2].copy()
-        if clippedImage.any():
-            cropped = cv2.imencode('.jpg', clippedImage)[1].tobytes()
-            try:
-                async with aiohttp.ClientSession() as session:
-                    data = aiohttp.FormData()
-                    data.add_field('imageData', cropped, filename='image.jpg')
-                    data.add_field('id',f"{id}")
-                    async with session.post(self.dapr_url , data=data, timeout=5, headers = {"dapr-app-id": "faceserver"}) as resp:
-                        jsonResponse = await resp.json()
-                        logging.info(jsonResponse)
-                        if jsonResponse not in [None, {}]:
-                            result = jsonResponse
+        gender = None
+        try:
+            clippedImage = frame[y:y2, x:x2].copy()
+            if clippedImage.any():
+                cropped = cv2.imencode('.jpg', clippedImage)[1].tobytes()
+                try:
+                    logging.info(f'{id} - {len(cropped)}')
+                    async with aiohttp.ClientSession() as session:
+                        data = aiohttp.FormData()
+                        data.add_field('imageData', cropped, filename='image.jpg')
+                        data.add_field('id',f"{id}")
+                        async with session.post(self.dapr_url , data=data, timeout=5, headers = {"dapr-app-id": "faceserver"}) as resp:
+                            jsonResponse = await resp.json()
+                            logging.info(jsonResponse)
+                            if jsonResponse not in [None, {}]:
+                                result = jsonResponse
+                                gender = result['gender']
 
-            except Exception as e:
-                print("Error sending image to service", flush=True)
-                logging.exception("Failed to detect gender")
-                
-        return result['gender']
+                except Exception as e:
+                    print("Error sending image to service", flush=True)
+                    logging.exception("Failed to detect gender")
+            
+            pString=f'Gender: {gender}'
+            print(pString)
+            logging.debug(pString)
+        except Exception as ex:
+            logging.exception('No image')
+
+        return gender
 
     async def addFacesIfExists(self, frame):
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
