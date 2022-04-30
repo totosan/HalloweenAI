@@ -158,9 +158,8 @@ class VideoProcessor():
                 self.trackableIDs[objId] = trackedIdObj
 
                 text = f"ID {objId}"
-                DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
-                DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
-                DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
+                DetectionHelper.drawCentroid(frame,centroidItem.center, text)
+                DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect)
         except Exception as e:
             print(e)
             logging.exception('Failed to add faces')
