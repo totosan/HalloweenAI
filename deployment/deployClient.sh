@@ -5,6 +5,7 @@ ARCH=amd64
 VERS="poc"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
 DAPR_USED=False
+INC=1
 
 echo "*******************************************************************************"
 echo "* Deploying $VERS for $ARCH"
@@ -35,6 +36,7 @@ az containerapp create \
   --name $CONTAINERAPPS_NAME \
   --resource-group $RESOURCE_GROUP \
   --environment $CONTAINERAPPS_ENVIRONMENT \
+  --revision-suffix $( expr $INC + 1 ) \
   --secrets "app-insight-key=$APP_INSIGHTS_KEY" \
   --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
   --ingress external\
