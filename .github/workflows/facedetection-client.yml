@@ -73,7 +73,7 @@ jobs:
         docker build . --file ./Dockers/${{ steps.dockerfile.outputs.filename }} \
         --build-arg VIDEO_PATH=$VIDEO_PATH \
         --build-arg DAPR_USED=$DAPR_USED \
-        --build-arg APP_INSIGHTS_KEY=${{ secrets.APP_INSIGHTS_KEY }}
+        --build-arg APP_INSIGHTS_KEY=${{ secrets.APP_INSIGHTS_KEY }} \
         --tag $DOCKER_REPO/facedetection:${{ matrix.architecture }}-preview 
     - name: Push the image
       run: |
