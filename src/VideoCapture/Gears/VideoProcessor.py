@@ -226,8 +226,9 @@ class VideoProcessor():
 
                 fps_text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*self.framerate.tick())
                 cv2.putText(frame_org, fps_text, (20, 40),cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
-
-                frame = await self.addFacesIfExists(frame_org)
+                
+                if frame_org is not None:
+                    frame = await self.addFacesIfExists(frame_org)
                 
                 #print(f'InQ: {self.inputQ.qsize()} OutQ: {self.outputQ.qsize()}')
 
