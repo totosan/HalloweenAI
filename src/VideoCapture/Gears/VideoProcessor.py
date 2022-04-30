@@ -130,44 +130,6 @@ class VideoProcessor():
                     shared['processStop'] = True
                     logging.error(e)
 
-            
-    async def __getObjectDetails__(self, frame, clipregion, id):
-
-        x = int(clipregion[0]-15.0)
-        y = int(clipregion[1]-15.0)
-        x2 = int(clipregion[2]+15.0)
-        y2 = int(clipregion[3]+15.0)
-
-        gender = None
-        try:
-            clippedImage = frame[y:y2, x:x2].copy()
-            if clippedImage.any():
-                cropped = cv2.imencode('.jpg', clippedImage)[1].tobytes()
-                try:
-                    logging.info(f'{id} - {len(cropped)}')
-                    async with aiohttp.ClientSession() as session:
-                        data = aiohttp.FormData()
-                        data.add_field('imageData', cropped, filename='image.jpg')
-                        data.add_field('id',f"{id}")
-                        async with session.post(self.dapr_url , data=data, timeout=5, headers = {"dapr-app-id": "faceserver"}) as resp:
-                            jsonResponse = await resp.json()
-                            logging.info(jsonResponse)
-                            if jsonResponse not in [None, {}]:
-                                result = jsonResponse
-                                gender = result['gender']
-
-                except Exception as e:
-                    print("Error sending image to service", flush=True)
-                    logging.exception("Failed to detect gender")
-            
-            pString=f'Gender: {gender}'
-            print(pString)
-            logging.debug(pString)
-        except Exception as ex:
-            logging.exception('No image')
-
-        return gender
-
     async def addFacesIfExists(self, frame):
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         detectedFacesRects = []
@@ -188,18 +150,14 @@ class VideoProcessor():
 
             for (objId, centroidItem) in trackedCentroidItems.items():
                 trackedIdObj = self.trackableIDs.get(objId,None)
-                gender = ""
+
                 if trackedIdObj is None and self.dapr_used:
                     print(f"New face detected: {objId}")
-                    result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
-                    if result is not None and result != "":
-                        gender = result
-                        centroidItem.class_type = gender
 
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj
 
-                text = f"ID {objId} - {centroidItem.class_type}"
+                text = f"ID {objId}"
                 DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
                 DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
@@ -207,7 +165,6 @@ class VideoProcessor():
             print(e)
             logging.exception('Failed to add faces')
             raise e
-        #print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
 
     async def generateFrames(self):
