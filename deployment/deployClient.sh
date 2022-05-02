@@ -37,8 +37,6 @@ az containerapp create \
   --resource-group $RESOURCE_GROUP \
   --environment $CONTAINERAPPS_ENVIRONMENT \
   --revision-suffix $( expr $INC + 1 ) \
-  --secrets "app-insight-key=$APP_INSIGHTS_KEY" \
-  --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
   --ingress external\
   --target-port 8080\
   --cpu 2.0\
