@@ -199,7 +199,8 @@ class VideoProcessor():
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj
 
-                text = f"ID {objId} - {centroidItem.class_type}"
+                text = f"ID {objId}"
+                #text = f"ID {objId} - {centroidItem.class_type}"
                 DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
                 DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)

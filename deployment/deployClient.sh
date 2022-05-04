@@ -76,6 +76,7 @@ else
     --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
     --ingress external\
     --target-port 8080\
+    --revision-suffix $VERS \
     --cpu 2.0\
     --memory 4.0Gi \
     --min-replicas 1 \
