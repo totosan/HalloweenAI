@@ -4,7 +4,7 @@ set -e
 ARCH=amd64
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
 DAPR_USED=False
-INC=1
+INC=0
 VERS="poc"
 VERS+=$INC
 ### Docker here: ########
