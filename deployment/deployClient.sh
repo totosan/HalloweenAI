@@ -36,15 +36,13 @@ docker build . --file ./Dockers/Dockerfile-$ARCH \
 --build-arg VIDEO_PATH=$VIDEO_PATH \
 --build-arg DAPR_USED=$DAPR_USED \
 --build-arg APP_INSIGHTS_KEY=$APP_INSIGHTS_KEY \
---tag totosan/facedetection:$ARCH-$VERS \
---tag totosan/facedetection:$ARCH-latest
+--tag totosan/facedetection:$ARCH-$VERS
 docker push totosan/facedetection:$ARCH-$VERS
-docker push totosan/facedetection:$ARCH-latest
+
 
 # Deployment here #######################################
-echo wait 5 seconds
-sleep 5
-if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT --query "name" | wc -l) -eq 0 ]; then
+
+if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT --only-show-errors --query "name" | wc -l) -eq 0 ]; then
   az containerapp env create \
     --dapr-instrumentation-key $APP_INSIGHTS_KEY \
     --name $CONTAINERAPPS_ENVIRONMENT \
@@ -54,28 +52,23 @@ if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT
     --logs-workspace-key $WSKEY
 fi
 
-if [ $VERS == "latest" ]; then
-    az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME -y
-fi
-
 #if containerapp already exists, delete it
-if [ $(az containerapp list -g $RESOURCE_GROUP -o table | grep $CONTAINERAPPS_NAME | wc -l) -gt 0 ]; then
+if [ $(az containerapp list -g $RESOURCE_GROUP -o table --only-show-errors | grep $CONTAINERAPPS_NAME | wc -l) -gt 0 ]; then
   az containerapp update \
     --resource-group $RESOURCE_GROUP \
     --name $CONTAINERAPPS_NAME \
     --image totosan/facedetection:$ARCH-$VERS
 else
-
   #create container app
   az containerapp create \
-    --image totosan/facedetection:$ARCH-latest \
+    --image totosan/facedetection:$ARCH-$VERS \
     --name $CONTAINERAPPS_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
     --secrets "app-insight-key=$APP_INSIGHTS_KEY" \
     --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
     --ingress external\
-    --target-port 8080\
+    --target-port 8080 \
     --revision-suffix $VERS \
     --cpu 2.0\
     --memory 4.0Gi \
