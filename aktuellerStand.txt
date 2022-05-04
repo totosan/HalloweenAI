@@ -1,6 +1,6 @@
 docker build . --file ./Dockers/Dockerfile-amd64 \
 --build-arg VIDEO_PATH=$VIDEO_PATH \
---tag totosan/facedetection:amd64-poc
+--tag totosan/facedetection:amd64-poc && \
 docker push totosan/facedetection:amd64-poc
 
 docker run --rm -p 8080:8080 totosan/facedetection:amd64-poc

@@ -2,15 +2,12 @@
 set -e
 
 ARCH=amd64
-VERS="poc"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
 DAPR_USED=False
 INC=1
-
-echo "*******************************************************************************"
-echo "* Deploying $VERS for $ARCH"
-echo "* Docker Image: totosan/facedetection:$ARCH-$VERS"
-echo "*******************************************************************************"
+VERS="poc"
+VERS+=$INC
+### Docker here: ########
 
 echo "Create docker image & push to Docker.io"
 
@@ -19,18 +16,17 @@ docker build . --file ./Dockers/Dockerfile-$ARCH \
 --tag totosan/facedetection:$ARCH-$VERS
 docker push totosan/facedetection:$ARCH-$VERS
 
-# Deployment here #######################################
+### Azure Part here... #######
 
-if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT --query "name" | wc -l) -eq 0 ]; then
-  az containerapp env create \
-    --name $CONTAINERAPPS_ENVIRONMENT \
-    --resource-group $RESOURCE_GROUP \
-    --location $LOCATION \
-    --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \
-    --logs-workspace-key $WSKEY
-fi
+echo "Create ContainerApp Environment"
+az containerapp env create \
+  --name $CONTAINERAPPS_ENVIRONMENT \
+  --resource-group $RESOURCE_GROUP \
+  --location $LOCATION \
+  --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \
+  --logs-workspace-key $WSKEY
 
-#create container app
+echo "Create ContainerApp"
 az containerapp create \
   --image totosan/facedetection:$ARCH-$VERS \
   --name $CONTAINERAPPS_NAME \

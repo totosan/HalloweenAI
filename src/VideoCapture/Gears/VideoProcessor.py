@@ -1,4 +1,5 @@
 # import required libraries
+from re import template
 import sys
 sys.path.append("./../Tracking/")
 
@@ -16,6 +17,10 @@ from pipe import select, where # https://github.com/JulienPalard/Pipe
 from vidgear.gears import VideoGear
 from vidgear.gears.asyncio import WebGear
 from vidgear.gears.asyncio.helper import reducer
+from starlette.routing import Mount
+from starlette.staticfiles import StaticFiles
+from starlette.routing import Route
+from starlette.responses import PlainTextResponse
 
 import uvicorn, asyncio, cv2
 import asyncio
@@ -48,7 +53,10 @@ class VideoProcessor():
             "custom_data_location":"./",
             "frame_size_reduction": 50,
             "enable_live_braodcast":True,
-        }   
+            "jpeg_compression_quality": 80,
+            "jpeg_compression_fastdct": True,
+            "jpeg_compression_fastupsample": False,
+            }   
         # open same stream without stabilization for comparison
         print("**************************")
         print(f'* Video: {video_source}')
@@ -62,7 +70,8 @@ class VideoProcessor():
                             'DaprUrl': self.dapr_url}))
 
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=25).start()
-        self.web_stream = WebGear(logging=False, **self.options)
+        self.web_stream = WebGear(logging=True, **self.options)
+        self.web_stream.routes.append(Route("/hello", endpoint=self.hello_ping, methods=["GET"]))
 
         # add your custom frame producer to config
         self.web_stream.config["generator"] = self.generateFrames
@@ -78,13 +87,13 @@ class VideoProcessor():
         self.framerate = coils.RateTicker((1, 5, 10))
         self.frame = None
 
-        self.frameInQueues = []
-        self.frameOutQueues = []
-
         self.inputQ = multiprocessing.Queue()
         self.outputQ = multiprocessing.Queue()
         shared['processStop'] = False
-
+    
+    async def hello_ping(self,request):
+        return PlainTextResponse(f'Faces tracked is empty:{len(self.centroids.objects)}')
+    
     def run(self):
         # run processes for video processing        
         processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(DETECTOR_PROCESS_NUM)]
