@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello Worl!</title>
+</head>
+<body>
+<h1>Hello World!</h1>
+{% for imagelist in imagelist %}
+<img src = "{{ url_for('static', filename=imagelist)}}">
+{% endfor %}
+</body>
+</html>

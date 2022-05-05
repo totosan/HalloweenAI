@@ -42,7 +42,6 @@ docker push totosan/facedetection:$ARCH-$VERS
 
 # Deployment here #######################################
 
-if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT --only-show-errors --query "name" | wc -l) -eq 0 ]; then
   az containerapp env create \
     --dapr-instrumentation-key $APP_INSIGHTS_KEY \
     --name $CONTAINERAPPS_ENVIRONMENT \
@@ -50,7 +49,6 @@ if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT
     --location $LOCATION \
     --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \
     --logs-workspace-key $WSKEY
-fi
 
 #create container app
 az containerapp create \
@@ -70,3 +68,5 @@ az containerapp create \
     --enable-dapr \
     --dapr-app-port 8080 \
     --dapr-app-id faceclient
+sleep 5
+watch -n 1 az containerapp logs show --name $CONTAINERAPPS_NAME --resource-group $RESOURCE_GROUP

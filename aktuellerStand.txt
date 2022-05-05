@@ -4,22 +4,6 @@ curl https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainer
 curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"1\"}" https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
 curl https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
 
-# restart facedetection app
-REV=$(az containerapp show -g $RESOURCE_GROUP --name $CONTAINERAPPS_NAME --query "properties.latestRevisionName" -o tsv)
-echo $REV
-az containerapp revision restart --revision $REV --resource-group MVPSession
-
-# restart facedetection server
-REV=$(az containerapp show -g $RESOURCE_GROUP --name $CONTAINERAPPSSERVER_NAME --query "properties.latestRevisionName" -o tsv)
-echo $REV
-az containerapp revision restart --revision $REV --resource-group MVPSession
 
 
-#alternative
-id=$(az containerapp revision list -g MVPSession -n facedetection-app --query "[?properties.active].id" -o tsv) 
-az containerapp revision restart --revision facedetection-app --resource-group MVPSession --ids $id
-
-
-# getting last used version of facedetection
-alias lastFaceAppVersion=`docker images | grep -v facedetectionapp | grep amd | awk '{print $2}' | sort | tail -n1 | cut -d '-' -f2`
-alias lastFaceServerVersion=`docker images | grep facedetectionapp | grep amd | awk '{print $2}' | sort | tail -n1 | cut -d '-' -f2`
+watch -n 1 az containerapp logs show -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME

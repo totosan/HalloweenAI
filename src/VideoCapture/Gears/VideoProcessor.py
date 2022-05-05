@@ -25,14 +25,9 @@ from Tracking.DetectionBase import DetectionBase
 from Tracking.centroidtracker import CentroidTracker
 from Tracking.gfx.DetectionHelper import DetectionHelper
 from VideoCapture.MultiProcessingLog import MultiProcessingLog
+from applicationinsights.logging import LoggingHandler
 
 import logging
-from applicationinsights.logging import LoggingHandler
-appinsightkey = os.getenv("APP_INSIGHTS_KEY","")
-handler = LoggingHandler(appinsightkey)
-mpLog = MultiProcessingLog(appinsightkey)
-logging.basicConfig(handlers=[ mpLog ], format='%(levelname)s: %(message)s',level=logging.ERROR)
-
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
@@ -191,11 +186,8 @@ class VideoProcessor():
                 gender = ""
                 if trackedIdObj is None and self.dapr_used:
                     print(f"New face detected: {objId}")
-                    result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
-                    if result is not None and result != "":
-                        gender = result
-                        centroidItem.class_type = gender
-
+                    await self.__getObjectDetails__(frame, centroidItem.rect, objId)
+                    
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj
 
@@ -220,7 +212,7 @@ class VideoProcessor():
                 frame_org = self.stream_org.read()
 
                 # put as input for face detection
-                if frameCnt % FRAME_DIST == 0 and self.inputQ.qsize() < 10:
+                if frameCnt % FRAME_DIST == 0 and self.inputQ.qsize() < 10 and frame_org is not None:
                     self.inputQ.put_nowait(frame_org)
                     frameCnt = 0 if frameCnt == 100 else frameCnt
                 frameCnt = frameCnt + 1

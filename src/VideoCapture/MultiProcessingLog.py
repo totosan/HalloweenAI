@@ -2,10 +2,11 @@ import os
 from logging.handlers import RotatingFileHandler
 import multiprocessing, threading, logging, sys, traceback
 from applicationinsights.logging import LoggingHandler
+from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 class MultiProcessingLog(logging.Handler):
     def __init__(self, appinsightkey):
-        handler = LoggingHandler(appinsightkey)
+        handler = AzureLogHandler(connection_string=f'InstrumentationKey={appinsightkey}')
         logging.Handler.__init__(self)
         logging.basicConfig(format='%(levelname)s: %(message)s')
 
