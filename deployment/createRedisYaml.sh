@@ -3,6 +3,7 @@ REDIS_NAME="facesink002"
 SKU="basic"
 SIZE="C0"
 DAPR_SCOPE="faceserver"
+RESOURCE_GROUP="MVPSession"
 
 #create redis cache
 az redis create --name $REDIS_NAME --resource-group $RESOURCE_GROUP --location "$LOCATION" --sku $SKU --vm-size $SIZE
