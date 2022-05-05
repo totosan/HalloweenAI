@@ -1,4 +1,4 @@
-import redis, os, json, struct
+import redis, os, json, struct, logging
 import numpy as np
 import cv2
 
