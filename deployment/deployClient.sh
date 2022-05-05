@@ -54,21 +54,9 @@ if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT
     --logs-workspace-key $WSKEY
 fi
 
-if [ $VERS == "latest" ]; then
-    az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME -y
-fi
-
-#if containerapp already exists, delete it
-if [ $(az containerapp list -g $RESOURCE_GROUP -o table | grep $CONTAINERAPPS_NAME | wc -l) -gt 0 ]; then
-  az containerapp update \
-    --resource-group $RESOURCE_GROUP \
-    --name $CONTAINERAPPS_NAME \
-    --image totosan/facedetection:$ARCH-$VERS
-else
-
-  #create container app
-  az containerapp create \
-    --image totosan/facedetection:$ARCH-latest \
+#create container app
+az containerapp create \
+    --image totosan/facedetection:$ARCH-$VERS \
     --name $CONTAINERAPPS_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
@@ -83,5 +71,4 @@ else
     --enable-dapr \
     --dapr-app-port 8080 \
     --dapr-app-id faceclient
-fi
 
