@@ -52,15 +52,8 @@ if [ $(az containerapp env show -g $RESOURCE_GROUP -n $CONTAINERAPPS_ENVIRONMENT
     --logs-workspace-key $WSKEY
 fi
 
-#if containerapp already exists, delete it
-if [ $(az containerapp list -g $RESOURCE_GROUP -o table --only-show-errors | grep $CONTAINERAPPS_NAME | wc -l) -gt 0 ]; then
-  az containerapp update \
-    --resource-group $RESOURCE_GROUP \
-    --name $CONTAINERAPPS_NAME \
-    --image totosan/facedetection:$ARCH-$VERS
-else
-  #create container app
-  az containerapp create \
+#create container app
+az containerapp create \
     --image totosan/facedetection:$ARCH-$VERS \
     --name $CONTAINERAPPS_NAME \
     --resource-group $RESOURCE_GROUP \
@@ -69,7 +62,7 @@ else
     --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
     --ingress external\
     --target-port 8080 \
-    --revision-suffix $VERS \
+    --revision-suffix ${VERS//\./-} \
     --cpu 2.0\
     --memory 4.0Gi \
     --min-replicas 1 \
@@ -77,5 +70,3 @@ else
     --enable-dapr \
     --dapr-app-port 8080 \
     --dapr-app-id faceclient
-fi
-
