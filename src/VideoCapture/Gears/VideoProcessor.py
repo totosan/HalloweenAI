@@ -45,6 +45,8 @@ class VideoProcessor():
         self.dapr_url = os.getenv("DAPR_HTTP_URL","http://localhost:{}/").format(self.dapr_port)
         self.dapr_used = os.getenv("DAPR_USED", False)
 
+        killer = GracefulKiller(self)
+
         # various performance tweaks
         self.options = {
             "custom_data_location":"./",
@@ -237,3 +239,19 @@ class VideoProcessor():
                 logging.error(e, exc_info=True)
                 shared['processStop'] = True
                 break
+
+
+import signal
+import time
+class GracefulKiller:
+  kill_now = False
+  def __init__(self, appToKill):
+    self.appToKill = appToKill
+    signal.signal(signal.SIGINT, self.exit_gracefully)
+    signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+  def exit_gracefully(self, *args):
+    self.kill_now = True
+    shared['processStop'] = False
+    
+#killer = GracefulKiller()

@@ -1,4 +1,4 @@
-import redis, os, json, struct, logging
+import redis, os, json, struct, logging, glob
 import numpy as np
 import cv2
 
@@ -30,5 +30,13 @@ def readImges():
     except Exception as e:
         print(e)
 
-if __name__ == "__main__":
-    readImges()
+def deleteAll():
+    try:
+        r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True,ssl=True)
+        for key in r.scan_iter("*"):
+            r.delete(key)
+        files= glob.glob('./static/pics/*')
+        for f in files:
+            os.remove(f)
+    except Exception as e:
+        print(e)

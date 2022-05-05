@@ -36,6 +36,7 @@ echo "**************************************************************************
     --name $CONTAINERAPPSVIEWER_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
+    --revision-suffix ${VERS//\./-} \
     --ingress external \
     --target-port 3500 \
     --transport http \
