@@ -16,6 +16,8 @@ from pipe import select, where # https://github.com/JulienPalard/Pipe
 from vidgear.gears import VideoGear
 from vidgear.gears.asyncio import WebGear
 from vidgear.gears.asyncio.helper import reducer
+from starlette.routing import Route
+from starlette.responses import PlainTextResponse
 
 import uvicorn, asyncio, cv2
 import aiohttp
@@ -67,6 +69,7 @@ class VideoProcessor():
 
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=25).start()
         self.web_stream = WebGear(logging=False, **self.options)
+        self.web_stream.routes.append(Route("/restart", endpoint=self.restart, methods=["GET"]))
 
         # add your custom frame producer to config
         self.web_stream.config["generator"] = self.generateFrames
@@ -82,20 +85,33 @@ class VideoProcessor():
         self.framerate = coils.RateTicker((1, 5, 10))
         self.frame = None
 
-        self.frameInQueues = []
-        self.frameOutQueues = []
-
         self.inputQ = multiprocessing.Queue()
         self.outputQ = multiprocessing.Queue()
         shared['processStop'] = False
+
+        config = uvicorn.Config(self.web_stream(), host="0.0.0.0", port=8000, log_level="info", loop="asyncio")
+        self.server= uvicorn.Server(config)
+
+    
+    async def restart(self,request):
+        print("Stopping processes")
+        shared['processStop'] = True
+        self.stream_org.stop()
+        self.inputQ.close()
+        self.outputQ.close()
+        self.server.should_exit=True
+        self.server.force_exit = True
+        await self.server.shutdown()
+        return PlainTextResponse(f'Restarting...')
 
     def run(self):
         # run processes for video processing        
         processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(DETECTOR_PROCESS_NUM)]
         for p in processesProcessing:
             p.start()
-        
-        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8080)
+
+      
+        self.server.run()
 
         # close app safely
         self.web_stream.shutdown()

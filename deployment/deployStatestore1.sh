@@ -4,13 +4,14 @@ set -e
 ARCH=amd64
 VERS="server1"
 # if false
-if [ "${1}" == "false" ]; then
+if [ -n "${1}" ]; then
   docker build . \
     -f ./Dockers/FaceApp.Dockerfile \
     --build-arg FACE_API_KEY=$FACE_API_KEY \
     --build-arg FACE_API_ENDPOINT=$FACE_API_ENDPOINT \
     -t totosan/facedetectionapp:$ARCH-$VERS 
   docker push totosan/facedetectionapp:$ARCH-$VERS
+  exit 0
 fi
 
 echo "*******************************************************************************"

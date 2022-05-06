@@ -6,7 +6,7 @@ VERS="dapr1"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
 
 # if false
-if [ "${1}" == "false" ]; then
+if [ -n "${1}" ]; then
 docker build . --file ./Dockers/Dockerfile-$ARCH \
 --build-arg VIDEO_PATH=$VIDEO_PATH \
 --build-arg DAPR_USED=$DAPR_USED \
