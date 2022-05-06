@@ -4,6 +4,7 @@ set -e
 ARCH=amd64
 VERS="dapr1"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
+DAPR_USED=True
 
 # if false
 if [ -n "${1}" ]; then

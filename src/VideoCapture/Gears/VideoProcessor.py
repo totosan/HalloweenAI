@@ -89,7 +89,7 @@ class VideoProcessor():
         self.outputQ = multiprocessing.Queue()
         shared['processStop'] = False
 
-        config = uvicorn.Config(self.web_stream(), host="0.0.0.0", port=8000, log_level="info", loop="asyncio")
+        config = uvicorn.Config(self.web_stream(), host="0.0.0.0", port=8080, log_level="info", loop="asyncio")
         self.server= uvicorn.Server(config)
 
     

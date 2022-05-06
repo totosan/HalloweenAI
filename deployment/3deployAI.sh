@@ -2,7 +2,7 @@
 set -e
 
 ARCH=amd64
-VERS="server1"
+VERS="server2"
 # if false
 if [ -n "${1}" ]; then
   docker build . \
@@ -27,6 +27,8 @@ az containerapp env dapr-component set \
     --name $CONTAINERAPPSSERVER_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
+    --env-vars "FACEAPI_USED=True" \
+    --revision-suffix $VERS \
     --ingress external \
     --target-port 3500 \
     --transport http \
