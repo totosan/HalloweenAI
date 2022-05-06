@@ -11,6 +11,7 @@ az containerapp env create \
   --name $CONTAINERAPPS_ENVIRONMENT \
   --resource-group $RESOURCE_GROUP \
   --location $LOCATION \
+  --dapr-instrumentation-key $APP_INSIGHTS_KEY \
   --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_CLIENT_ID \
   --logs-workspace-key $WSKEY
 
