@@ -27,7 +27,6 @@ az containerapp env dapr-component set \
     --name $CONTAINERAPPSSERVER_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
-    --set-vars FACEAPI_USED=False \
     --ingress external \
     --target-port 3500 \
     --transport http \

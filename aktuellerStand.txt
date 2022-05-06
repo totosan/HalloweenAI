@@ -8,7 +8,10 @@ curl https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubprev
 docker images --format='{{.Repository}} {{.ID}} {{.Tag}}' | grep 'v1.' | cut -d' ' -f2 | xargs docker rmi -f
 
 # delete app
-az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME -y
+az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME -y &&\
+az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPSSERVER_NAME -y &&\
+az containerapp delete -g $RESOURCE_GROUP -n imageviewer -y
+
 
 # listen to streaming log
 watch -n 1 az containerapp logs show -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME

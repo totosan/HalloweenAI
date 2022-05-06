@@ -33,3 +33,10 @@ fi
     --enable-dapr \
     --dapr-app-port 3500 \
     --dapr-app-id imageviewer
+
+sleep 5
+echo "Deployment complete"
+url="https://"
+fqdn=`az containerapp show -g $RESOURCE_GROUP -n $CONTAINERAPPSVIEWER_NAME --query "properties.configuration.ingress.fqdn" -o tsv`
+url+=$fqdn
+echo "Visit $url to see the app"

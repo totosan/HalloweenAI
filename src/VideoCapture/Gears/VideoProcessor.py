@@ -213,7 +213,7 @@ class VideoProcessor():
                 self.trackableIDs[objId] = trackedIdObj
 
                 # if gender is none or empty string
-                if gender is None or gender == "":
+                if centroidItem.class_type not in ["male", "female"]:
                     text = f"ID {objId}"
                 else:
                     text = f"ID {objId} - {centroidItem.class_type}"
