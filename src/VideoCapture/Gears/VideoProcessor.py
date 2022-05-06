@@ -188,14 +188,21 @@ class VideoProcessor():
                 gender = ""
                 if trackedIdObj is None and self.dapr_used:
                     print(f"New face detected: {objId}")
-                    await self.__getObjectDetails__(frame, centroidItem.rect, objId)
+                    result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
+                    if result is not None and result != "":
+                        gender = result
+                        centroidItem.class_type = gender
                     
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj
 
-                text = f"ID {objId}"
-                #text = f"ID {objId} - {centroidItem.class_type}"
-                DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
+                # if gender is none or empty string
+                if gender is None or gender == "":
+                    text = f"ID {objId}"
+                else:
+                    text = f"ID {objId} - {centroidItem.class_type}"
+                
+                DetectionHelper.drawCentroid(frame,centroidItem.center)
                 DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
         except Exception as e:

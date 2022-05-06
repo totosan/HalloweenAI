@@ -2,23 +2,10 @@
 set -e
 
 ARCH=amd64
-VERS=$1
+VERS=image1
 CONTAINERAPPSVIEWER_NAME=imageviewer
 #override ARCH with input, if not empty
-if [ ! -z "$2" ]; then
-    ARCH=$2
-fi
-
-#if VERS is empty exit
-if [ -z "$VERS" ]; then
-  echo "Usage: $0 <version>"
-  exit 1
-fi
-
-echo "*******************************************************************************"
-echo "* Deploying $VERS for $ARCH"
-echo "*******************************************************************************"
-
+if [ -n "${1}" ]; then
   docker build . \
     -f ./Dockers/ImageView.Dockerfile \
     --build-arg REDIS_CONN_STR=$REDIS_CONN_STR \
@@ -26,11 +13,10 @@ echo "**************************************************************************
     -t totosan/redis-imageviewer:$ARCH-$VERS \
     -t totosan/redis-imageviewer:$ARCH-latest
   docker push totosan/redis-imageviewer:$ARCH-$VERS && docker push totosan/redis-imageviewer:$ARCH-latest
+exit 0
+fi
 
 
-echo "*******************************************************************************"
-echo "* Container App $CONTAINERAPPSVIEWER_NAME does not exist, Creating it"
-echo "*******************************************************************************"
   az containerapp create \
     --image totosan/redis-imageviewer:$ARCH-$VERS \
     --name $CONTAINERAPPSVIEWER_NAME \

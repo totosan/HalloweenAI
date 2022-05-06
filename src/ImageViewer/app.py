@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, redirect, render_template
 import os
 import readRedis as rr
 
@@ -19,4 +19,4 @@ def index():
 @app.route("/deleteall")
 def delete():
     rr.deleteAll()
-    return render_template("index.html")
+    return render_template("index.html",)

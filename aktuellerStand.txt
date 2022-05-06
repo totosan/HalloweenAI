@@ -4,6 +4,11 @@ curl https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainer
 curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"1\"}" https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
 curl https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
 
+# delete images with v1.*
+docker images --format='{{.Repository}} {{.ID}} {{.Tag}}' | grep 'v1.' | cut -d' ' -f2 | xargs docker rmi -f
 
+# delete app
+az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME -y
 
+# listen to streaming log
 watch -n 1 az containerapp logs show -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME
