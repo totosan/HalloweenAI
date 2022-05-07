@@ -2,36 +2,12 @@
 set -e
 
 ARCH=amd64
-VERS="v1.0"
+VERS="dapr1"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
-DAPR_USED=False
+DAPR_USED=True
 
-#override ARCH with input, if not empty
-if [ ! -z "$2" ]; then
-    ARCH=$2
-fi
-
-#if VERS is empty exit
-if [ ! -z "$1" ]; then
-    #if $1 is help, print usage
-    if [ "$1" == "help" ]; then
-        echo "Usage: $0 <version>"
-        exit 1
-    else
-        VERS=$1
-    fi
-else
-    echo "Usage: $0 <version>"
-    exit 1
-fi
-
-echo "*******************************************************************************"
-echo "* Deploying $VERS for $ARCH"
-echo "* Docker Image: totosan/facedetection:$ARCH-$VERS"
-echo "*******************************************************************************"
-
-echo "Create docker image & push to Docker.io"
-
+# if false
+if [ -n "${1}" ]; then
 docker build . --file ./Dockers/Dockerfile-$ARCH \
 --build-arg VIDEO_PATH=$VIDEO_PATH \
 --build-arg DAPR_USED=$DAPR_USED \
@@ -39,7 +15,8 @@ docker build . --file ./Dockers/Dockerfile-$ARCH \
 --tag totosan/facedetection:$ARCH-$VERS
 docker push totosan/facedetection:$ARCH-$VERS
 
-
+exit 0
+fi
 # Deployment here #######################################
 
   az containerapp env create \
@@ -68,6 +45,9 @@ az containerapp create \
     --enable-dapr \
     --dapr-app-port 8080 \
     --dapr-app-id faceclient
-
-watch -n 1 az containerapp logs show --name $CONTAINERAPPS_NAME --resource-group $RESOURCE_GROUP
-
+sleep 5
+echo "Deployment complete"
+url="https://"
+fqdn=`az containerapp show -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME --query "properties.configuration.ingress.fqdn" -o tsv`
+url+=$fqdn
+echo "Visit $url to see the app"

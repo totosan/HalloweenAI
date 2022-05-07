@@ -38,7 +38,7 @@ img {
 }
 
 .rounded {
-    border-radius: 0.25rem !important;
+    border-radius: 0.5rem !important;
 }
 
 /* ends */
@@ -51,6 +51,7 @@ img {
     /* Internet Explorer 10+ */
     scrollbar-width: none;
     /* Firefox */
+    background-color: #dbb92e;
 }
 
 .bodycontainer::-webkit-scrollbar {
@@ -60,7 +61,7 @@ img {
 
 h1 {
     text-align: center;
-    color: #fff;
+    color: rgb(146, 234, 233);
     font-weight: 400;
     margin-bottom: 0.5rem;
     text-transform: Uppercase;

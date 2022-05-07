@@ -4,15 +4,17 @@ curl https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainer
 curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"1\"}" https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
 curl https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
 
-# restart facedetection app
-REV=$(az containerapp show -g $RESOURCE_GROUP --name $CONTAINERAPPS_NAME --query "properties.latestRevisionName" -o tsv)
-echo $REV
-az containerapp revision restart --revision $REV --resource-group MVPSession
+# delete images with v1.*
+docker images --format='{{.Repository}} {{.ID}} {{.Tag}}' | grep 'v1.' | cut -d' ' -f2 | xargs docker rmi -f
 
-# restart facedetection server
-REV=$(az containerapp show -g $RESOURCE_GROUP --name $CONTAINERAPPSSERVER_NAME --query "properties.latestRevisionName" -o tsv)
-echo $REV
-az containerapp revision restart --revision $REV --resource-group MVPSession
+# delete app
+az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME -y &&\
+az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPSSERVER_NAME -y &&\
+az containerapp delete -g $RESOURCE_GROUP -n imageviewer -y
+
+
+# listen to streaming log
+watch -n 1 az containerapp logs show -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME
 
 
 #alternative

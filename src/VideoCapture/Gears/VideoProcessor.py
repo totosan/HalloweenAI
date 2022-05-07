@@ -16,6 +16,8 @@ from pipe import select, where # https://github.com/JulienPalard/Pipe
 from vidgear.gears import VideoGear
 from vidgear.gears.asyncio import WebGear
 from vidgear.gears.asyncio.helper import reducer
+from starlette.routing import Route
+from starlette.responses import PlainTextResponse
 
 import uvicorn, asyncio, cv2
 import aiohttp
@@ -25,14 +27,9 @@ from Tracking.DetectionBase import DetectionBase
 from Tracking.centroidtracker import CentroidTracker
 from Tracking.gfx.DetectionHelper import DetectionHelper
 from VideoCapture.MultiProcessingLog import MultiProcessingLog
+from applicationinsights.logging import LoggingHandler
 
 import logging
-from applicationinsights.logging import LoggingHandler
-appinsightkey = os.getenv("APP_INSIGHTS_KEY","")
-handler = LoggingHandler(appinsightkey)
-mpLog = MultiProcessingLog(appinsightkey)
-logging.basicConfig(handlers=[ mpLog ], format='%(levelname)s: %(message)s',level=logging.ERROR)
-
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
@@ -49,6 +46,8 @@ class VideoProcessor():
         self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3500)
         self.dapr_url = os.getenv("DAPR_HTTP_URL","http://localhost:{}/").format(self.dapr_port)
         self.dapr_used = os.getenv("DAPR_USED", False)
+
+        killer = GracefulKiller(self)
 
         # various performance tweaks
         self.options = {
@@ -70,6 +69,7 @@ class VideoProcessor():
 
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=25).start()
         self.web_stream = WebGear(logging=False, **self.options)
+        self.web_stream.routes.append(Route("/restart", endpoint=self.restart, methods=["GET"]))
 
         # add your custom frame producer to config
         self.web_stream.config["generator"] = self.generateFrames
@@ -85,20 +85,33 @@ class VideoProcessor():
         self.framerate = coils.RateTicker((1, 5, 10))
         self.frame = None
 
-        self.frameInQueues = []
-        self.frameOutQueues = []
-
         self.inputQ = multiprocessing.Queue()
         self.outputQ = multiprocessing.Queue()
         shared['processStop'] = False
+
+        config = uvicorn.Config(self.web_stream(), host="0.0.0.0", port=8080, log_level="info", loop="asyncio")
+        self.server= uvicorn.Server(config)
+
+    
+    async def restart(self,request):
+        print("Stopping processes")
+        shared['processStop'] = True
+        self.stream_org.stop()
+        self.inputQ.close()
+        self.outputQ.close()
+        self.server.should_exit=True
+        self.server.force_exit = True
+        await self.server.shutdown()
+        return PlainTextResponse(f'Restarting...')
 
     def run(self):
         # run processes for video processing        
         processesProcessing = [Process(target=self.processFrame,daemon=True) for _ in range(DETECTOR_PROCESS_NUM)]
         for p in processesProcessing:
             p.start()
-        
-        uvicorn.run(self.web_stream(), host="0.0.0.0", port=8080)
+
+      
+        self.server.run()
 
         # close app safely
         self.web_stream.shutdown()
@@ -195,12 +208,17 @@ class VideoProcessor():
                     if result is not None and result != "":
                         gender = result
                         centroidItem.class_type = gender
-
+                    
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj
 
-                text = f"ID {objId} - {centroidItem.class_type}"
-                DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
+                # if gender is none or empty string
+                if centroidItem.class_type not in ["male", "female"]:
+                    text = f"ID {objId}"
+                else:
+                    text = f"ID {objId} - {centroidItem.class_type}"
+                
+                DetectionHelper.drawCentroid(frame,centroidItem.center)
                 DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
         except Exception as e:
@@ -219,7 +237,7 @@ class VideoProcessor():
                 frame_org = self.stream_org.read()
 
                 # put as input for face detection
-                if frameCnt % FRAME_DIST == 0 and self.inputQ.qsize() < 10:
+                if frameCnt % FRAME_DIST == 0 and self.inputQ.qsize() < 10 and frame_org is not None:
                     self.inputQ.put_nowait(frame_org)
                     frameCnt = 0 if frameCnt == 100 else frameCnt
                 frameCnt = frameCnt + 1
@@ -244,3 +262,19 @@ class VideoProcessor():
                 logging.error(e, exc_info=True)
                 shared['processStop'] = True
                 break
+
+
+import signal
+import time
+class GracefulKiller:
+  kill_now = False
+  def __init__(self, appToKill):
+    self.appToKill = appToKill
+    signal.signal(signal.SIGINT, self.exit_gracefully)
+    signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+  def exit_gracefully(self, *args):
+    self.kill_now = True
+    shared['processStop'] = False
+    
+#killer = GracefulKiller()

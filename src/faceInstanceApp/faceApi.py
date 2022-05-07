@@ -31,6 +31,7 @@ app=Flask(__name__)
 detector = FaceDetection()
 
 dapr_port = int(os.getenv("DAPR_HTTP_PORT", 3500))
+use_faceapi = os.getenv("FACEAPI_USED",False)
 
 def sendToStateStore(img, payload):
     try:
@@ -41,12 +42,14 @@ def sendToStateStore(img, payload):
         # Convert RGB to BGR 
         open_cv_image = open_cv_image[:, :, ::-1].copy() 
         h,w = open_cv_image.shape[:2]
-        detection = detector.detect_single(open_cv_image)
-        faceId = None
-        gender = None
-        if detection is not None:
-            faceId = detection.face_id
-            gender = detection.face_attributes.gender
+        faceId = str(payload)
+        gender = ""
+        
+        if use_faceapi:
+            detection = detector.detect_single(open_cv_image)
+            if detection is not None:
+                faceId = detection.face_id
+                gender = detection.face_attributes.gender
 
         # pack the image
         shape = struct.pack('>II',h,w)
