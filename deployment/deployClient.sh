@@ -68,5 +68,6 @@ az containerapp create \
     --enable-dapr \
     --dapr-app-port 8080 \
     --dapr-app-id faceclient
-sleep 5
+
 watch -n 1 az containerapp logs show --name $CONTAINERAPPS_NAME --resource-group $RESOURCE_GROUP
+

@@ -4,6 +4,7 @@ CONTAINERAPPS_ENVIRONMENT="ai-tt-env"
 CONTAINERAPPS_NAME="facedetection-app"
 CONTAINERAPPSSERVER_NAME="facedetection-server"
 
+az provider show -n Microsoft.App --query "resourceTypes[?resourceType=='managedEnvironments'].locations"
 
 az containerapp env create \
   --name $CONTAINERAPPS_ENVIRONMENT \

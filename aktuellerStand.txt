@@ -15,3 +15,13 @@ az containerapp delete -g $RESOURCE_GROUP -n imageviewer -y
 
 # listen to streaming log
 watch -n 1 az containerapp logs show -g $RESOURCE_GROUP -n $CONTAINERAPPS_NAME
+
+
+#alternative
+id=$(az containerapp revision list -g MVPSession -n facedetection-app --query "[?properties.active].id" -o tsv) 
+az containerapp revision restart --revision facedetection-app --resource-group MVPSession --ids $id
+
+
+# getting last used version of facedetection
+alias lastFaceAppVersion=`docker images | grep -v facedetectionapp | grep amd | awk '{print $2}' | sort | tail -n1 | cut -d '-' -f2`
+alias lastFaceServerVersion=`docker images | grep facedetectionapp | grep amd | awk '{print $2}' | sort | tail -n1 | cut -d '-' -f2`
