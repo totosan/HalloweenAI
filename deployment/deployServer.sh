@@ -80,6 +80,7 @@ echo "**************************************************************************
     --name $CONTAINERAPPSSERVER_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
+    --env-vars "FACEAPI_USED=True" \
     --ingress external \
     --target-port 3500 \
     --transport http \
