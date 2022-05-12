@@ -127,3 +127,8 @@ so you have to use ldd and apt-file to get things done:
     - so we know now, that we also should install **libjpeg62**
     - apt install libjpeg62
 - continue with all other.
+
+Sometimes it could also help to do that:
+`apt-get update && apt-get install libgl1`
+
+[Source from here](ttps://itsmycode.com/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directory/)

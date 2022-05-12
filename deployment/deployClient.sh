@@ -63,7 +63,7 @@ az containerapp create \
     --revision-suffix ${VERS//\./-} \
     --cpu 2.0\
     --memory 4.0Gi \
-    --min-replicas 1 \
+    --min-replicas 0 \
     --max-replicas 1 \
     --enable-dapr \
     --dapr-app-port 8080 \

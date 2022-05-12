@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template
+from flask import Flask, jsonify, redirect, render_template
 import os
 import readRedis as rr
 
@@ -16,6 +16,13 @@ def index():
     imagelist = ['pics/' + image for image in imageList]
     return render_template("index.html", imagelist=imagelist)
 
+@app.route("/images")
+def images():
+    rr.readImges()
+    imageList = os.listdir('./static/pics')
+    imagelist = ['pics/' + image for image in imageList]
+    return jsonify(imageList)
+    
 @app.route("/deleteall")
 def delete():
     rr.deleteAll()
