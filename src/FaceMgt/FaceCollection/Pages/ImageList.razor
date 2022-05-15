@@ -1,0 +1,34 @@
+@page "/images"
+@using System.Net.Http
+@inject HttpClient Http
+@using System.Net.Http.Json
+@inject IHttpClientFactory ClientFactory
+
+<PageTitle>Faces</PageTitle>
+
+@foreach (var file in getImagesFromRedis())
+{
+    <p class="">@file</p><br/>
+}
+
+@code {
+    private List<string>? images;
+
+    // readall files from dir
+    private IEnumerable<string> getImagesFromRedis()
+    {
+        if (images != null)
+        {
+            foreach (var im in images)
+            {
+                yield return im;
+            }
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        images = await
+        Http.GetFromJsonAsync<List<string>>("https://totosan-halloweenai-r4vw9g5p2597q-3500.githubpreview.dev/images");
+            Console.WriteLine(images);
+    }
+}

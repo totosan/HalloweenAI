@@ -1,5 +1,5 @@
-from flask import Flask, jsonify, redirect, render_template
-import os
+from flask import Flask, jsonify, redirect, render_template, Response
+import os, json
 import readRedis as rr
 
 app = Flask(__name__)
@@ -21,7 +21,8 @@ def images():
     rr.readImges()
     imageList = os.listdir('./static/pics')
     imagelist = ['pics/' + image for image in imageList]
-    return jsonify(imageList)
+    response = Response(json.dumps(imagelist), mimetype='application/json', headers={'Access-Control-Allow-Origin': '*'})
+    return response
     
 @app.route("/deleteall")
 def delete():

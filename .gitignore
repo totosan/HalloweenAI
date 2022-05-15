@@ -13,3 +13,6 @@ video.mp4
 **/*.local.*
 **/readCache.py
 */tests/*
+
+**/bin/*
+**/obj/*

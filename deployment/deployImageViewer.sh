@@ -26,8 +26,8 @@ fi
     --ingress external \
     --target-port 3500 \
     --transport http \
-    --min-replicas 1 \
-    --max-replicas 10 \
+    --min-replicas 0 \
+    --max-replicas 2 \
     --cpu 2.0 \
     --memory 4.0Gi \
     --enable-dapr \

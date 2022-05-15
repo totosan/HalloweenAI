@@ -59,7 +59,9 @@ az containerapp env dapr-component set \
 
 #create container app
 if [ $VERS == "latest" ]; then
+  echo "Deleting Container App, because of lable latest"
     az containerapp delete -g $RESOURCE_GROUP -n $CONTAINERAPPSSERVER_NAME -y
+    sleep 10
 fi
 
 

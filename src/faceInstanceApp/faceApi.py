@@ -15,6 +15,7 @@ from urllib import response
 from flask import Flask, request, jsonify
 from dapr.clients import DaprClient
 from PIL import Image
+import cv2
 import logging 
 import numpy
 from Tracking.FaceAPI import FaceDetection
@@ -53,7 +54,8 @@ def sendToStateStore(img, payload):
 
         # pack the image
         shape = struct.pack('>II',h,w)
-        encoded = shape + open_cv_image.tobytes()
+        cv2Image = cv2.imencode('.jpg',open_cv_image)
+        encoded = shape + cv2Image.tobytes()
         
         values={'face_id':faceId, 'gender':gender, 'img':bytes.decode(encoded, encoding="ISO-8859-1")}
         if True:

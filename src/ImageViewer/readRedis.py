@@ -1,6 +1,7 @@
-import redis, os, json, struct, logging, glob
+import redis, os, json, struct, logging, glob, sys
 import numpy as np
 import cv2
+np.set_printoptions(threshold=sys.maxsize)
 
 redis_host = os.getenv("REDIS_CONN_STR", "localhost")
 redis_port = 6380
@@ -11,7 +12,11 @@ def saveImage(img, faceId):
     h, w = struct.unpack('>II',encoded[:8])
     # Add slicing here, or else the array would differ from the original
     a = np.frombuffer(encoded[8:],np.uint8)
-    cv2.imwrite(f'./static/pics/{faceId}.jpg', a.reshape(h, w, 3))
+    reshaped = a.reshape(h, w, 3)
+    if faceId == "28":
+        print(f'hxw:{h}x{w} len:{len(encoded)} fId:{faceId}')
+        print(a)
+    cv2.imwrite(f'./static/pics/{faceId}.jpg', reshaped)
 
 def readImges():
     """Example Hello Redis Program"""
@@ -40,3 +45,6 @@ def deleteAll():
             os.remove(f)
     except Exception as e:
         print(e)
+
+if __name__ == '__main__':
+    readImges()
