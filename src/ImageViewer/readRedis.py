@@ -1,4 +1,4 @@
-import redis, os, json, struct, logging, glob, sys
+import redis, os, json, struct, logging, glob, sys, base64
 import numpy as np
 import cv2
 np.set_printoptions(threshold=sys.maxsize)
@@ -9,14 +9,10 @@ redis_password = os.getenv("REDIS_KEY", "")
 
 def saveImage(img, faceId):
     encoded=str.encode(img,encoding='ISO-8859-1')
-    h, w = struct.unpack('>II',encoded[:8])
-    # Add slicing here, or else the array would differ from the original
-    a = np.frombuffer(encoded[8:],np.uint8)
-    reshaped = a.reshape(h, w, 3)
-    if faceId == "28":
-        print(f'hxw:{h}x{w} len:{len(encoded)} fId:{faceId}')
-        print(a)
-    cv2.imwrite(f'./static/pics/{faceId}.jpg', reshaped)
+    im_bytes = base64.b64decode(encoded)
+    im_arr = np.frombuffer(im_bytes, dtype=np.uint8)  # im_arr is one-dim Numpy array
+    img = cv2.imdecode(im_arr, flags=cv2.IMREAD_COLOR)
+    cv2.imwrite(f'./static/pics/{faceId}.jpg', img)
 
 def readImges():
     """Example Hello Redis Program"""

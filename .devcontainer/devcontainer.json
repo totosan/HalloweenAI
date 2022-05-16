@@ -15,7 +15,8 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"GitHub.copilot"
+		"GitHub.copilot",
+		"ms-vscode.vscode-node-azure-pack"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

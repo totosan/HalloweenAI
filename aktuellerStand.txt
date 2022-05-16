@@ -1,8 +1,5 @@
-curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"1\"}" https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainerapps.io
-curl https://facedetection-server.jollyflower-fe9d49b4.westeurope.azurecontainerapps.io
-
-curl -X POST -H "Content-Type:application/json" -d "{\"id\":\"1\"}" https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
-curl https://totosan-microsoft-bootcamp-halloweenai-r4vw9g5p2jxg-3500.githubpreview.dev/
+#sending test-image to facedetectionapp 
+curl -X POST -F imageData=@56cf8f74-e15f-4d15-8547-aee511c2266e.jpg -F id=1002 https://facedetection-server.gentleriver-bc7d53da.westeurope.azurecontainerapps.io
 
 # delete images with v1.*
 docker images --format='{{.Repository}} {{.ID}} {{.Tag}}' | grep 'v1.' | cut -d' ' -f2 | xargs docker rmi -f

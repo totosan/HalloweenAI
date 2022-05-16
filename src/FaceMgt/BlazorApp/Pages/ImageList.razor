@@ -1,84 +1,28 @@
 @page "/images"
-@using Microsoft.Extensions.Caching.Distributed
-@using StackExchange.Redis
-@using System.Text.Json
-@using System.Text
-
-@using BlazorApp.Data
-@using System.Drawing.Imaging
-@using System.Drawing
-@inject IConnectionMultiplexer _cnnMulti
-@inject IDistributedCache Cache
 
 <PageTitle>Faces</PageTitle>
-
-<ul>
-    <li>Face | WxH</li>
-    @foreach (var item in getImagesFromDir())
-    {
-        <li><span> <img src="@item.Base64Src" class="face" />@item.Extra</span></li>
-    }
-</ul>
-@code {
-    private string? imageSource;
-
-    // readall files from dir
-    private IEnumerable<FaceResult> getImagesFromDir()
-    {
-        var servers = _cnnMulti.GetEndPoints();
-        if (servers.Any())
+<div class="board">
+    <div class="board-side">
+        <ul>
+            <li>
+                <button @onclick="onClickDelete" > Delete all</button>
+            </li>
+        </ul>
+    </div>
+    <div class="cards">
+        @foreach (var item in getImagesFromDir())
         {
-            var server = servers.First();
+            <div class="card">
+                <header>@item.Extra</header>
+                <img src="@item.Base64Src" class="face" alt="@item.Extra" />
 
-            var instance = _cnnMulti.GetServer(server);
-
-            foreach (var key in instance.Keys(0, "*"))
-            {
-                string result = "";
-                var redisDb = _cnnMulti.GetDatabase(0);
-                var record = redisDb.HashGetAll(key);
-                var jsonResult = JsonSerializer.Deserialize<Data.RedisRecord>(record[1].Value);
-
-                Encoding iso = Encoding.GetEncoding("ISO-8859-1");
-                var utf8Bytes = iso.GetBytes(jsonResult.img);
-                var unpacked = StructConverter.Unpack(">II", utf8Bytes.Take(8).ToArray());
-                var width = Convert.ToInt32(unpacked[0]);
-                var height = Convert.ToInt32(unpacked[1]);
-                try
-                {
-                    var imgBytes = utf8Bytes.Skip(8).ToArray();
-                
-                    var rgb = FromByteArray(imgBytes,new System.Drawing.Size{Height=height, Width=width});
-                    
-                    using (var stream = new MemoryStream())
-                    {
-                        rgb.Save(stream, ImageFormat.Jpeg );
-                        var bytes = stream.ToArray();
-                        result = Convert.ToBase64String(bytes);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.Write(e.Message);
-                }
-                yield return new FaceResult { Base64Src = "data:image/jpg;base64," + result, Extra = $"{width}x{height} {jsonResult.face_id}" };
-            }
+                <footer class="@item.Gender"></footer>
+            </div>
         }
-    }
-    public static Bitmap FromByteArray(byte[] ByteArray, System.Drawing.Size Size)
-    {
-
-        Bitmap bmp = new Bitmap(Size.Width, Size.Height, PixelFormat.Format24bppRgb);
-
-        BitmapData bmpdata = bmp.LockBits(new System.Drawing.Rectangle(0, 0, Size.Width, Size.Height), ImageLockMode.WriteOnly,
-        PixelFormat.Format24bppRgb);
-
-        IntPtr ptr = bmpdata.Scan0;
-
-        System.Runtime.InteropServices.Marshal.Copy(ByteArray, 0, ptr, ByteArray.Length);
-
-        bmp.UnlockBits(bmpdata);
-
-        return bmp;
-    }
-}
+    </div>
+    <div class="group-area">
+    </div>
+    <div class="board-footer status">
+        Status: @Status
+    </div>
+</div>

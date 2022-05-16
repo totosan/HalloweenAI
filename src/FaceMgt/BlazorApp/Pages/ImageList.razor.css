@@ -1,12 +1,76 @@
-ul{
-    margin: auto;
-    border: 1px solid #d6d5d5;
+
+.board{
+    display: grid;
+    grid-template-columns: 0.5fr 1.5fr 1fr 1fr;
+    grid-template-rows: minmax(20px,auto) 1fr 1fr;
+    gap: 10px;
+}
+.board-side{
+    grid-column: 1;
+    grid-row: 1/-1;
+    background-color: antiquewhite;
+}
+.board-side ul{
+    list-style-type: none;
+    padding: 0;
+}
+.board-side ul li{
+    padding: 5px;
+    border-bottom: 1px solid black;
+    text-align: center;
+}
+.board-side button{
+    border: 1px solid black;
+    border-radius: 3px;
+    width: 100%;
+    height: 30px;
+}
+.board-footer{
+    grid-column: 1/-1;
+    grid-row: -1;
+    background-color: antiquewhite;
+}
+.group-area{
+    grid-column: 4/-1;
+    background-color: antiquewhite;
+}
+.cards {
+    grid-column: 2/4;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-gap: 20px;
 }
 
-li{
-    display: block;
+.card {
+    display: grid;
+    grid-auto-rows: minmax(20px, auto);
+    border: 2px solid black
 }
 
-img.face{
-    /*width: 150px;*/
+.card img {
+    object-fit: cover;
+    margin:auto;
+    padding: 10px;
+    height: 150px;
+    grid-row: 2;
+}
+header{
+    text-align: center;
+    grid-row: 1;
+}
+footer{
+    grid-row: 3;
+}
+.male{
+    object-fit: fill;
+    width: auto;
+    height: 100%;
+    background-color: lightskyblue;
+}
+
+.female{
+    object-fit: fill;
+    width: auto;
+    height: 100%;
+    background-color: violet;
 }

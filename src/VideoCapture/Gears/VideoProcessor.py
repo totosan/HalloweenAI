@@ -30,8 +30,9 @@ from VideoCapture.MultiProcessingLog import MultiProcessingLog
 from applicationinsights.logging import LoggingHandler
 
 import logging
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
-# debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
 DETECTOR_PROCESS_NUM = 1
 CONFIDENCE = 0.3
@@ -61,7 +62,7 @@ class VideoProcessor():
         print(f'* Streaming: {streamMode}')
         print(f'* Config: {self.options}')
         print("**************************")
-        logging.info(dumps({'Video': video_source,
+        log.info(dumps({'Video': video_source,
                             'Streaming': streamMode,
                             'Config': self.options,
                             'DaprUsed': self.dapr_used,
