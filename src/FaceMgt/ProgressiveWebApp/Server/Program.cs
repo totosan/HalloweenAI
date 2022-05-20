@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.ResponseCompression;
+using ProgressiveWebApp.Server;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexe
         Password = redis_key,
         Ssl = true
     }));
+builder.Services.AddHostedService<NotificationBackgroundService>();
 
 var app = builder.Build();
 
