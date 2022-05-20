@@ -1,4 +1,5 @@
 ﻿@page "/images"
+@using SimpleDragAndDropWithBlazor.Models
 
 <PageTitle>Faces</PageTitle>
 <div class="board">
@@ -9,6 +10,10 @@
             </li>
         </ul>
     </div>
+    <JobsContainer Jobs="Jobs">
+        <JobsList ListStatus="JobStatuses.ToSort" AllowedStatuses="@(new JobStatuses[] { JobStatuses.ToSort})" />
+        <JobsList ListStatus="JobStatuses.Sorted" AllowedStatuses="@(new JobStatuses[] { JobStatuses.Sorted})" />
+    </JobsContainer>
     <div class="cards">
         @foreach (var item in Images)
         {
