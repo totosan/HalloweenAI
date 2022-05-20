@@ -1,18 +1,16 @@
 # import required libraries
-from logging import currentframe
+import logging
 import multiprocessing
 from multiprocessing.context import Process
-from multiprocessing.queues import Queue
 import os
-from time import sleep
 import cv2
-from numpy import string_
 from Tracking.CentroidItem import CentroidItem
-from Tracking.FaceDetector_cv2 import CONFIDENCE
 from Tracking.TrackingHelper import TrackingHelper
-from Tracking.TrackingHelper_multi import TrackingHelper_multi
-from Tracking.trackableobject import TrackableObject
-import dlib
+
+import numpy as np
+from filterpy.kalman import KalmanFilter
+from filterpy.common import Q_discrete_white_noise
+
 import coils
 from pipe import select, where # https://github.com/JulienPalard/Pipe
 
@@ -38,7 +36,7 @@ shared = multiprocessing.Manager().dict()
 
 try:
     import ptvsd
-    ptvsd.enable_attach(address=('localhost', 5678), redirect_output=True)
+    #ptvsd.enable_attach(address=('localhost', 5678), redirect_output=True)
 except:
     pass
 
@@ -88,6 +86,17 @@ class VideoProcessor():
         self.inputQ = multiprocessing.Queue()
         self.outputQ = multiprocessing.Queue()
         shared['processStop'] = False
+
+        self.filter = KalmanFilter (dim_x=2, dim_z=1)
+        self.filter.x = np.array([[2.],    # position
+                             [0.]])   # velocity
+        self.filter.F = np.array([[1.,1.],
+                            [0.,1.]])
+        self.filter.H = np.array([[1.,0.]])
+        self.filter.P *= 1000.
+        self.filter.R = 5
+
+        self.filter.Q = Q_discrete_white_noise(dim=2, dt=0.1, var=0.13)
 
     def run(self):
         # run processes for video processing        
@@ -149,20 +158,28 @@ class VideoProcessor():
         # add IDs to tracked regions
         centroidItems = list(detectedFacesRects | select(lambda x:CentroidItem(class_type=0, rect=x)))
         trackedCentroidItems = self.centroids.update(centroidItems)
+        try:
+            for (objId, centroidItem) in trackedCentroidItems.items():
+                trackedIdObj = self.trackableIDs.get(objId,None)
+                if trackedIdObj is None and self.dapr_used:
+                    print(f"New face detected: {objId}")
+                    self.sendToFacesStore(objId)
 
-        for (objId, centroidItem) in trackedCentroidItems.items():
-            trackedIdObj = self.trackableIDs.get(objId,None)
-            if trackedIdObj is None and self.dapr_used:
-                print(f"New face detected: {objId}")
-                self.sendToFacesStore(objId)
-            trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
-            self.trackableIDs[objId] = trackedIdObj
+                trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
+                self.trackableIDs[objId] = trackedIdObj
+                cx=int(centroidItem.centroid[0])
+                cy=int(centroidItem.centroid[1])
+                self.filter.predict()
+                self.filter.update((cx,cy))
 
-            text = "ID {}".format(objId)
-            DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
-            DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
-            DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
-
+                text = "ID {}".format(objId)
+                DetectionHelper.drawCentroid(frame,self.filter.x,str(len(self.trackableIDs[objId].centroids)))
+                #DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
+                DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
+                DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
+        except Exception as e:
+            print(e, flush=True)
+            logging.exception(e)
         print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
 

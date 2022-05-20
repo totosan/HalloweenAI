@@ -58,14 +58,14 @@
         },
         "modules": {
           "VideoModule": {
-            "version": "1.0",
+            "version": "$VERS",
             "type": "docker",
             "status": "running",
             "restartPolicy": "always",
             "settings": {
               "image": "${MODULES.VideoModule.debug}",
               "createOptions": {
-                "Env":["VIDEO_PATH=https://youtu.be/LHrf6XzxuTM"],
+                "Env":["VIDEO_PATH=$VIDEO_PATH"],
                 "ExposedPorts": {
                   "5678/tcp": {},
                   "8080/tcp": {}

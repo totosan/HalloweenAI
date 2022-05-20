@@ -12,3 +12,8 @@ video.mp4
 # specific folder
 /hardware
 *.local.*
+
+**/bin/
+**/obj/
+/src/**/*.jpg
+*Development.json
