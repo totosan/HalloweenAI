@@ -34,7 +34,7 @@ namespace ProgressiveWebApp.Server.Controllers
 
                 var instance = _cnnMulti.GetServer(server);
 
-                foreach (var key in instance.Keys(0, "*"))
+                foreach (var key in instance.Keys(0, "face*"))
                 {
                     var redisDb = _cnnMulti.GetDatabase(0);
                     var deleted = redisDb.KeyDelete(key);
@@ -58,7 +58,7 @@ namespace ProgressiveWebApp.Server.Controllers
 
                 var instance = _cnnMulti.GetServer(server);
 
-                foreach (var key in instance.Keys(0, "*"))
+                foreach (var key in instance.Keys(0, "face*"))
                 {
                     string result = "";
                     var redisDb = _cnnMulti.GetDatabase(0);
