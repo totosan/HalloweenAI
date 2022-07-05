@@ -24,7 +24,8 @@
       "name": "Python: Videostream",
       "type": "python",
       "request": "launch",
-      "program": "./main_gears.py",
+      "program": "${workspaceFolder}/EdgeSolution/modules/VideoModule/main_gears.py",
+      "cwd": "${workspaceFolder}/EdgeSolution/modules/VideoModule/",
       "console": "integratedTerminal"
     }
   ]

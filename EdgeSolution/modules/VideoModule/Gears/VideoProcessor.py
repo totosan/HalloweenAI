@@ -6,10 +6,8 @@ import os
 import cv2
 from Tracking.CentroidItem import CentroidItem
 from Tracking.TrackingHelper import TrackingHelper
-
+from Tracking.KalmanFilter import KalmanFilter
 import numpy as np
-from filterpy.kalman import KalmanFilter
-from filterpy.common import Q_discrete_white_noise
 
 import coils
 from pipe import select, where # https://github.com/JulienPalard/Pipe
@@ -33,12 +31,6 @@ DETECTOR_PROCESS_NUM = 1
 CONFIDENCE = 0.3
 FRAME_DIST = 5
 shared = multiprocessing.Manager().dict()
-
-try:
-    import ptvsd
-    #ptvsd.enable_attach(address=('localhost', 5678), redirect_output=True)
-except:
-    pass
 
 class VideoProcessor():
     
@@ -86,17 +78,9 @@ class VideoProcessor():
         self.inputQ = multiprocessing.Queue()
         self.outputQ = multiprocessing.Queue()
         shared['processStop'] = False
-
-        self.filter = KalmanFilter (dim_x=2, dim_z=1)
-        self.filter.x = np.array([[2.],    # position
-                             [0.]])   # velocity
-        self.filter.F = np.array([[1.,1.],
-                            [0.,1.]])
-        self.filter.H = np.array([[1.,0.]])
-        self.filter.P *= 1000.
-        self.filter.R = 5
-
-        self.filter.Q = Q_discrete_white_noise(dim=2, dt=0.1, var=0.13)
+        
+        # KalmanFilter(dt, u_x, u_y, std_acc, x_std_meas, y_std_meas)
+        self.filter = KalmanFilter(0.1, 1, 1, 1, 0.1,0.1)
 
     def run(self):
         # run processes for video processing        
@@ -167,14 +151,19 @@ class VideoProcessor():
 
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj
-                cx=int(centroidItem.centroid[0])
-                cy=int(centroidItem.centroid[1])
-                self.filter.predict()
-                self.filter.update((cx,cy))
+                
+                print(f'center of {objId}: {centroidItem.center}')
+                DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
+                #(kfx,_) = self.filter.predict()
+                #if(len(kfx.transpose())>1):
+                #    (kfx,kfy) = (int(kfx[:,0]),int(kfx[:,1]))
+                    #DetectionHelper.drawCentroid(frame,(int(kfx),int(kfy)),"kf")
 
                 text = "ID {}".format(objId)
-                DetectionHelper.drawCentroid(frame,self.filter.x,str(len(self.trackableIDs[objId].centroids)))
-                #DetectionHelper.drawCentroid(frame,centroidItem.center,str(len(self.trackableIDs[objId].centroids)))
+                #(kfx2,kfy2) = self.filter.update(centroidItem.center)
+                #(kfx2,kfy2) = (int(kfx2[:,0]),int(kfx2[:,1]))
+                #DetectionHelper.drawCentroid(frame,(kfx2,kfy2),"kf2")
+
                 DetectionHelper.drawBoundingBoxes(frame,centroidItem.rect, text)
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
         except Exception as e:
