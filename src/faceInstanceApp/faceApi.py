@@ -1,6 +1,7 @@
 import sys
 
-from itsdangerous import base64_decode, base64_encode
+
+import base64
 sys.path.append("../")
 sys.path.append("../Tracking/")
 
@@ -15,6 +16,7 @@ from urllib import response
 from flask import Flask, request, jsonify
 from dapr.clients import DaprClient
 from PIL import Image
+import cv2
 import logging 
 import numpy
 from Tracking.FaceAPI import FaceDetection
@@ -41,7 +43,6 @@ def sendToStateStore(img, payload):
         open_cv_image = numpy.array(img) 
         # Convert RGB to BGR 
         open_cv_image = open_cv_image[:, :, ::-1].copy() 
-        h,w = open_cv_image.shape[:2]
         faceId = str(payload)
         gender = ""
         
@@ -52,10 +53,11 @@ def sendToStateStore(img, payload):
                 gender = detection.face_attributes.gender
 
         # pack the image
-        shape = struct.pack('>II',h,w)
-        encoded = shape + open_cv_image.tobytes()
-        
-        values={'face_id':faceId, 'gender':gender, 'img':bytes.decode(encoded, encoding="ISO-8859-1")}
+        ret, imgJpg = cv2.imencode('.jpg', open_cv_image)
+        print(imgJpg)
+        b64Image = base64.b64encode(imgJpg)
+ 
+        values={'face_id':faceId, 'gender':gender, 'img':bytes.decode(b64Image, encoding='ISO-8859-1')}
         if True:
             with DaprClient() as d:
                 # Save state
@@ -64,7 +66,7 @@ def sendToStateStore(img, payload):
                 d.save_state(store_name="statestore", key=str(payload), value=jsonValues)
         return {'faceId':faceId, 'gender':gender}
     except Exception as e:
-        logging.error(f"{e}")
+        logging.exception(e)
 
 @app.route("/", methods=['POST','GET'])
 def faceCallApi():
