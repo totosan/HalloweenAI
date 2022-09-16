@@ -30,13 +30,13 @@ az containerapp env dapr-component set \
     --env-vars "FACEAPI_USED=True" \
     --revision-suffix $VERS \
     --ingress external \
-    --target-port 3500 \
+    --target-port 3000 \
     --transport http \
     --min-replicas 1 \
     --max-replicas 10 \
     --cpu 2.0 \
     --memory 4.0Gi \
     --enable-dapr \
-    --dapr-app-port 3500 \
+    --dapr-app-port 3000 \
     --dapr-app-id faceserver
 

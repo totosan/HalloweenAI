@@ -32,7 +32,7 @@ app=Flask(__name__)
 
 detector = FaceDetection()
 
-dapr_port = int(os.getenv("DAPR_HTTP_PORT", 3500))
+dapr_port = int(os.getenv("DAPR_HTTP_PORT", 3000))
 use_faceapi = os.getenv("FACEAPI_USED",False)
 
 def sendToStateStore(img, payload):
