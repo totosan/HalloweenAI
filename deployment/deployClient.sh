@@ -2,9 +2,9 @@
 set -e
 
 ARCH=amd64
-VERS="v1.0"
+VERS="app"
 VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
-DAPR_USED=False
+DAPR_USED=True
 
 #override ARCH with input, if not empty
 if [ ! -z "$2" ]; then
@@ -13,32 +13,22 @@ fi
 
 #if VERS is empty exit
 if [ ! -z "$1" ]; then
-    #if $1 is help, print usage
-    if [ "$1" == "help" ]; then
-        echo "Usage: $0 <version>"
-        exit 1
-    else
-        VERS=$1
-    fi
-else
-    echo "Usage: $0 <version>"
-    exit 1
+    
+    echo "*******************************************************************************"
+    echo "* Deploying $VERS for $ARCH"
+    echo "* Docker Image: totosan/facedetection:$ARCH-$VERS"
+    echo "*******************************************************************************"
+
+    echo "Create docker image & push to Docker.io"
+
+    docker build . --file ./Dockers/Dockerfile-$ARCH \
+    --build-arg VIDEO_PATH=$VIDEO_PATH \
+    --build-arg DAPR_USED=$DAPR_USED \
+    --build-arg APP_INSIGHTS_KEY=$APP_INSIGHTS_KEY \
+    --tag totosan/facedetection:$ARCH-$VERS
+    docker push totosan/facedetection:$ARCH-$VERS
+
 fi
-
-echo "*******************************************************************************"
-echo "* Deploying $VERS for $ARCH"
-echo "* Docker Image: totosan/facedetection:$ARCH-$VERS"
-echo "*******************************************************************************"
-
-echo "Create docker image & push to Docker.io"
-
-docker build . --file ./Dockers/Dockerfile-$ARCH \
---build-arg VIDEO_PATH=$VIDEO_PATH \
---build-arg DAPR_USED=$DAPR_USED \
---build-arg APP_INSIGHTS_KEY=$APP_INSIGHTS_KEY \
---tag totosan/facedetection:$ARCH-$VERS
-docker push totosan/facedetection:$ARCH-$VERS
-
 
 # Deployment here #######################################
 

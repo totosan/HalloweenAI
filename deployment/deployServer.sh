@@ -75,12 +75,12 @@ echo "**************************************************************************
     --environment $CONTAINERAPPS_ENVIRONMENT \
     --env-vars "FACEAPI_USED=True" \
     --ingress external \
-    --target-port 3500 \
+    --target-port 3000 \
     --transport http \
     --min-replicas 0 \
     --max-replicas 10 \
     --cpu 2.0 \
     --memory 4.0Gi \
     --enable-dapr \
-    --dapr-app-port 3500 \
+    --dapr-app-port 3000 \
     --dapr-app-id faceserver

@@ -28,7 +28,7 @@ namespace BlazorApp.Pages
                     string result = "";
                     var redisDb = CnnMulti.GetDatabase(0);
                     var record = redisDb.HashGetAll(key);
-                    var jsonResult = JsonSerializer.Deserialize<RedisRecord>(record[1].Value);
+                    var jsonResult = JsonSerializer.Deserialize<RedisRecord>(record[0].Value);
 
                     Encoding iso = Encoding.GetEncoding("ISO-8859-1");
                     result = jsonResult.img;
@@ -40,7 +40,7 @@ namespace BlazorApp.Pages
         protected void onClickDelete()
         {
             this.Status = "";
-            
+
             {
                 var servers = CnnMulti.GetEndPoints();
                 if (servers.Any())
