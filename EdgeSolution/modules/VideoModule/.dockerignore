@@ -7,3 +7,4 @@ config.json
 *.jpg
 .git
 .devcontainer
+Tracking_depricated

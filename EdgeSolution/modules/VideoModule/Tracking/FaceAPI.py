@@ -1,24 +1,9 @@
-import asyncio
-import io
-import glob
 import os
-import sys
-from threading import Thread
-import time
-from typing import final
-import uuid
-import requests
-from urllib.parse import urlparse
-from io import BytesIO
-# To install this module, run:
-# python -m pip install Pillow
-from PIL import Image, ImageDraw
 import cv2
 from azure.cognitiveservices.vision.face import FaceClient
 from msrest.authentication import CognitiveServicesCredentials
-from azure.cognitiveservices.vision.face.models import TrainingStatusType, Person
 
-from Tracking.DetectionBase import DetectionBase
+from DetectionBase import DetectionBase
 
 # This key will serve all examples in this document.
 KEY = os.getenv("FACE_API_KEY")
@@ -40,7 +25,7 @@ class FaceDetection(DetectionBase):
         cv2.imwrite(imageName,frame) 
         copyFrame = open(imageName,"r+b")
         try:
-            detected_faces = self.face_client.face.detect_with_stream( copyFrame, detection_model='detection_03')
+            detected_faces = self.face_client.face.detect_with_stream( copyFrame, detection_model='detection_01', recognition_model='recognition_04', return_face_attributes=['age','gender'])
         except Exception as e:
             print(e)
             detected_faces = None
@@ -75,7 +60,7 @@ class FaceDetection(DetectionBase):
         cv2.imwrite(imageName,frame) 
         copyFrame = open(imageName,"r+b")
         try:
-            detected_faces = self.face_client.face.detect_with_stream( copyFrame, detection_model='detection_03')
+            detected_faces = self.face_client.face.detect_with_stream( copyFrame, detection_model='detection_01', recognition_model='recognition_04', return_face_attributes=['age','gender'])
         except Exception as e:
             print(e)
             detected_faces = None
@@ -97,8 +82,10 @@ class FaceDetection(DetectionBase):
                 frame = cv2.rectangle(frame, start,end, (255, 0 , 0), thickness=2)
 
         returnValue=None
-        if len(detected_faces)>1:
-            returnValue = detected_faces[1]
-            print('Expected one face, but got {}.'.format(len(detected_faces)))
-        
+        if detected_faces is not None and len(detected_faces)>0:
+            if len(detected_faces)>1:
+                print('Expected one face, but got {}.'.format(len(detected_faces)))
+            returnValue = detected_faces[0]
         return returnValue
+
+

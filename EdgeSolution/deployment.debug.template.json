@@ -11,9 +11,14 @@
             "loggingOptions": "",
             "registryCredentials": {
               "iotcontainertt": {
-                "username": "$CONTAINER_REGISTRY_USERNAME_iotcontainertt",
-                "password": "$CONTAINER_REGISTRY_PASSWORD_iotcontainertt",
+                "username": "${CONTAINER_REGISTRY_USERNAME}",
+                "password": "${CONTAINER_REGISTRY_PASSWORD}",
                 "address": "iotcontainertt.azurecr.io"
+              },
+              "docker": {
+                "username": "${CONTAINER_REGISTRY_USERNAME_docker}",
+                "password": "${CONTAINER_REGISTRY_PASSWORD_docker}",
+                "address": "docker.io"
               }
             }
           }
@@ -57,15 +62,37 @@
           }
         },
         "modules": {
+          "redisStore": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "redis:alpine",
+              "createOptions": {
+                "HostConfig": {
+                  "PortBindings": {
+                    "6379/tcp": [
+                      {
+                        "HostPort": "6379"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
           "VideoModule": {
-            "version": "$VERS",
+            "version": "${VERS_VIDEO_MODULE}",
             "type": "docker",
             "status": "running",
             "restartPolicy": "always",
             "settings": {
               "image": "${MODULES.VideoModule.debug}",
               "createOptions": {
-                "Env":["VIDEO_PATH=$VIDEO_PATH"],
+                "Env": [
+                  "VIDEO_PATH=${VIDEO_PATH}"
+                ],
                 "ExposedPorts": {
                   "5678/tcp": {},
                   "8080/tcp": {}
@@ -88,13 +115,31 @@
                       "PathOnHost": "/dev/video0",
                       "PathInContainer": "/dev/video0",
                       "CgroupPermissions": "rwm"
-                    },
-                    {
-                      "PathOnHost": "/dev/video1",
-                      "PathInContainer": "/dev/video1",
-                      "CgroupPermissions": "rwm"
                     }
                   ]
+                }
+              }
+            }
+          },
+          "faceserverModule": {
+            "version": "${VERS_FACESERVER_MODULE}",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.faceserverModule.debug}",
+              "createOptions": {
+                "ExposedPorts": {
+                  "5679/tcp": {}
+                },
+                "HostConfig": {
+                  "PortBindings": {
+                    "5678/tcp": [
+                      {
+                        "HostPort": "5679"
+                      }
+                    ]
+                  }
                 }
               }
             }
@@ -107,7 +152,7 @@
         "schemaVersion": "1.2",
         "routes": {
           "VideoModuleToIoTHub": "FROM /messages/modules/VideoModule/outputs/* INTO $upstream",
-          "sensorToVideoModule": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/VideoModule/inputs/input1\")"
+          "faceserverModuleToIoTHub": "FROM /messages/modules/faceserverModule/outputs/* INTO $upstream"
         },
         "storeAndForwardConfiguration": {
           "timeToLiveSecs": 7200

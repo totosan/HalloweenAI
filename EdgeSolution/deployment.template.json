@@ -14,6 +14,11 @@
                 "username": "$CONTAINER_REGISTRY_USERNAME_iotcontainertt",
                 "password": "$CONTAINER_REGISTRY_PASSWORD_iotcontainertt",
                 "address": "iotcontainertt.azurecr.io"
+              },
+              "docker": {
+                "username": "$CONTAINER_REGISTRY_USERNAME_docker",
+                "password": "$CONTAINER_REGISTRY_PASSWORD_docker",
+                "address": "docker.io"
               }
             }
           }
@@ -65,7 +70,9 @@
             "settings": {
               "image": "${MODULES.VideoModule}",
               "createOptions": {
-                "Env": ["VIDEO_PATH=/dev/video0"],
+                "Env": [
+                  "VIDEO_PATH=/dev/video0"
+                ],
                 "ExposedPorts": {
                   "8080/tcp": {}
                 },
@@ -87,21 +94,32 @@
                 }
               }
             }
+          },
+          "faceserverModule": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.faceserverModule}",
+              "createOptions": {}
+            }
           }
         }
       }
-      },
-      "$edgeHub": {
-        "properties.desired": {
-          "schemaVersion": "1.2",
-          "routes": {
-            "VideoModuleToIoTHub": "FROM /messages/modules/VideoModule/outputs/* INTO $upstream",
-            "sensorToVideoModule": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/VideoModule/inputs/input1\")"
-          },
-          "storeAndForwardConfiguration": {
-            "timeToLiveSecs": 7200
-          }
+    },
+    "$edgeHub": {
+      "properties.desired": {
+        "schemaVersion": "1.2",
+        "routes": {
+          "VideoModuleToIoTHub": "FROM /messages/modules/VideoModule/outputs/* INTO $upstream",
+          "sensorToVideoModule": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/VideoModule/inputs/input1\")",
+          "faceserverModuleToIoTHub": "FROM /messages/modules/faceserverModule/outputs/* INTO $upstream"
+        },
+        "storeAndForwardConfiguration": {
+          "timeToLiveSecs": 7200
         }
       }
     }
   }
+}

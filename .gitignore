@@ -15,5 +15,7 @@ video.mp4
 
 **/bin/
 **/obj/
+src
 /src/**/*.jpg
 *Development.json
+*_deprecated
