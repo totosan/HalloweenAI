@@ -8,6 +8,11 @@ jobs:
    runs-on: ubuntu-latest
    steps:
    - uses: actions/checkout@v2.3.4
-   
+   - name: Azure Container Registry Login
+     uses: Azure/docker-login@v1
+     with:
+       username: ${secrets.ACR_USERNAME}
+       password: ${secrets.ACR_PASSWORD}
+       login-server: ${secrets.ACR_SERVER}
    - run: echo "Dummy"
      
