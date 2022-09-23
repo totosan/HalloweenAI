@@ -1,4 +1,4 @@
-from gfx.DetectionHelper import DetectionHelper
+from Tracking.gfx.DetectionHelper import DetectionHelper
 import dlib 
 
 class TrackingHelper:

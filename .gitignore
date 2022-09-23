@@ -19,3 +19,4 @@ src
 /src/**/*.jpg
 *Development.json
 *_deprecated
+.myenv

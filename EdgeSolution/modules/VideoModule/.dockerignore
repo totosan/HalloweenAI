@@ -3,8 +3,11 @@ __pycache__
 .venv
 .env
 config.json
+*.mp4
 *.deb
 *.jpg
 .git
 .devcontainer
 Tracking_depricated
+archived
+Docker*

@@ -1,15 +1,19 @@
+FROM --platform=linux/arm64/v8 iotcontainertt.azurecr.io/tracking-py:latest as build
+
 FROM totosan/arm64-python:3.8-web-science 
+RUN ["cross-build-start"]
 
 ARG VIDEO_PATH
 ARG DAPR_USED=False
-
+ARG TARGETARCH=$TARGETARCH
+ARG BUILDARCH
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
-RUN ["cross-build-start"]
-
+COPY --from=build /wheelhouse-* /wheelhouse
+RUN ls -alH /wheelhouse
 COPY . .
-
+RUN pip install /wheelhouse/*.whl
 RUN pip install -r requirements_ARM64.txt
 
 CMD [ "python", "main_gears.py" ]
