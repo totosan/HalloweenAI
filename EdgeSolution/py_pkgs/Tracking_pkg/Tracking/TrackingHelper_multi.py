@@ -1,7 +1,7 @@
 import multiprocessing
 from multiprocessing.context import Process
 from os import stat
-from gfx.DetectionHelper import DetectionHelper
+from Tracking.gfx.DetectionHelper import DetectionHelper
 from multiprocessing import Queue
 import dlib 
 

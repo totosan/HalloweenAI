@@ -2,7 +2,7 @@
 from scipy.spatial import distance as dist
 from collections import OrderedDict
 import numpy as np
-from CentroidItem import CentroidItem
+from Tracking.CentroidItem import CentroidItem
 
 class CentroidTracker:
 	def __init__(self, maxDisappeared=100, maxDistance=50):

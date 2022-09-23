@@ -1,8 +1,8 @@
 import cv2
 import imutils
 import numpy as np
-from DetectionBase import DetectionBase
-from CentroidItem import CentroidItem
+from Tracking.DetectionBase import DetectionBase
+from Tracking.CentroidItem import CentroidItem
 
 CONFIDENCE = 0.3
 

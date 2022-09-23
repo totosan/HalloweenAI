@@ -13,8 +13,8 @@ ENV DAPR_USED=$DAPR_USED
 COPY --from=build /wheelhouse-* /wheelhouse
 RUN ls -alH /wheelhouse
 COPY . .
-RUN pip install /wheelhouse/*.whl
-RUN pip install -r requirements_ARM64.txt
+RUN pip install /wheelhouse/Tracking*.whl && \
+    pip install -r requirements_ARM64.txt
 
 CMD [ "python", "main_gears.py" ]
 RUN ["cross-build-end"]
