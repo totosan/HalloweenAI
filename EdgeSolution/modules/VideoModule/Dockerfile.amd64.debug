@@ -1,13 +1,18 @@
+FROM --platform=linux/arm64/v8 iotcontainertt.azurecr.io/tracking-py:latest as build
 FROM totosan/amd64-python:3.8-web-science 
 
 ARG VIDEO_PATH
 ARG DAPR_USED=False
-
+ARG TARGETARCH=$TARGETARCH
+ARG BUILDARCH
 ENV VIDEO_PATH=$VIDEO_PATH
 ENV DAPR_USED=$DAPR_USED
 
-RUN python -m pip install --upgrade pip numpy==1.21.4
+COPY --from=build /wheelhouse-* /wheelhouse
+RUN ls -alH /wheelhouse
 COPY . .
-RUN pip install -r requirements_ARM64.txt
+RUN pip install /wheelhouse/Tracking*.whl && \
+    pip install setuptools && \
+    pip install -r requirements_ARM64.txt
 
 CMD [ "python", "main_gears.py" ]

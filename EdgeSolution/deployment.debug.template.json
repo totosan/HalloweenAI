@@ -115,6 +115,11 @@
                       "PathOnHost": "/dev/video0",
                       "PathInContainer": "/dev/video0",
                       "CgroupPermissions": "rwm"
+                    },
+                    {
+                      "PathOnHost": "/dev/video1",
+                      "PathInContainer": "/dev/video1",
+                      "CgroupPermissions": "rwm"
                     }
                   ]
                 }

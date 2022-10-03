@@ -54,7 +54,7 @@ class VideoProcessor():
         self.options = {
             "custom_data_location":"./",
             "frame_size_reduction": 50,
-            "enable_live_braodcast":True,
+            #"enable_live_broadcast":True,
         }   
         # open same stream without stabilization for comparison
         print("**************************")
@@ -69,7 +69,7 @@ class VideoProcessor():
                             'DaprUrl': self.dapr_url}))
 
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=25).start()
-        self.web_stream = WebGear(logging=False, **self.options)
+        self.web_stream = WebGear(logging=True, **self.options)
         self.web_stream.routes.append(Route("/restart", endpoint=self.restart, methods=["GET"]))
 
         # add your custom frame producer to config

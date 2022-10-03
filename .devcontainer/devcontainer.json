@@ -15,7 +15,8 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"GitHub.copilot"
+		"GitHub.copilot",
+		"vsciot-vscode.azure-iot-tools"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -37,7 +38,8 @@
 		"git": "latest",
 		"sshd": "latest",
 		"python": "3.8",
-		"azure-cli": "latest"
-	},
-	"postCreateCommand": "docker run --rm --privileged multiarch/qemu-user-static --reset -p yes && docker buildx create --name multiarch --driver docker-container --use && docker buildx inspect --bootstrap"
+		"azure-cli": "latest",
+		"dotnet": "latest"
+	}//,
+	//"postCreateCommand": "docker run --rm --privileged multiarch/qemu-user-static --reset -p yes && docker buildx create --name multiarch --driver docker-container --use && docker buildx inspect --bootstrap"
 }

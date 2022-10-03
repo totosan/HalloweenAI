@@ -5,12 +5,15 @@ from Tracking.DetectionBase import DetectionBase
 from Tracking.CentroidItem import CentroidItem
 
 CONFIDENCE = 0.3
+import pkg_resources
+
+DATA_PATH = pkg_resources.resource_filename('Tracking', 'dnn/face_detector/')
 
 class FaceDetectorDnn(DetectionBase):
     def __init__(self) -> None:
         super().__init__()
-        prototxt = "../Tracking/dnn/face_detector/deploy.prototxt"
-        weights = "../Tracking/dnn/face_detector/res10_300x300_ssd_iter_140000.caffemodel"
+        prototxt = f"{DATA_PATH}/deploy.prototxt"
+        weights = f"{DATA_PATH}/res10_300x300_ssd_iter_140000.caffemodel"
         self.net = cv2.dnn.readNetFromCaffe(prototxt, weights)
 
     def detect_multi(self, frame):
