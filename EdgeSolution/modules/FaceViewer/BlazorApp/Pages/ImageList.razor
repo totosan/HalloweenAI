@@ -1,0 +1,28 @@
+@page "/images"
+
+<PageTitle>Faces</PageTitle>
+<div class="board">
+    <div class="board-side">
+        <ul>
+            <li>
+                <button @onclick="onClickDelete" > Delete all</button>
+            </li>
+        </ul>
+    </div>
+    <div class="cards">
+        @foreach (var item in getImagesFromDir())
+        {
+            <div class="card">
+                <header>@item.Extra</header>
+                <img src="@item.Base64Src" class="face" alt="@item.Extra" />
+
+                <footer class="@item.Gender"></footer>
+            </div>
+        }
+    </div>
+    <div class="group-area">
+    </div>
+    <div class="board-footer status">
+        Status: @Status
+    </div>
+</div>

@@ -63,7 +63,7 @@
         },
         "modules": {
           "redisStore": {
-            "version": "1.0",
+            "version": "1.1",
             "type": "docker",
             "status": "running",
             "restartPolicy": "always",
@@ -74,7 +74,7 @@
                   "PortBindings": {
                     "6379/tcp": [
                       {
-                        "HostPort": "6379"
+                        "HostPort": "6380"
                       }
                     ]
                   }
@@ -115,11 +115,6 @@
                       "PathOnHost": "/dev/video0",
                       "PathInContainer": "/dev/video0",
                       "CgroupPermissions": "rwm"
-                    },
-                    {
-                      "PathOnHost": "/dev/video1",
-                      "PathInContainer": "/dev/video1",
-                      "CgroupPermissions": "rwm"
                     }
                   ]
                 }
@@ -142,6 +137,39 @@
                     "5678/tcp": [
                       {
                         "HostPort": "5679"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "FaceViewer": {
+            "version": "${VERS_FACEVIEWER_MODULE}",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.FaceViewer.debug}",
+              "createOptions": {
+                "Env": [
+                  "REDIS_CONN_STR=${REDIS_HOST}",
+                  "REDIS_KEY=${REDIS_KEY}"
+                ],
+                "ExposedPorts": {
+                  "443/tcp": {},
+                  "80/tcp": {}
+                },
+                "HostConfig": {
+                  "PortBindings": {
+                    "80/tcp": [
+                      {
+                        "HostPort": "8081"
+                      }
+                    ],
+                    "444/tcp": [
+                      {
+                        "HostPort": "4434"
                       }
                     ]
                   }

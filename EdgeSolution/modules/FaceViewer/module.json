@@ -2,7 +2,7 @@
     "$schema-version": "0.0.1",
     "description": "",
     "image": {
-        "repository": "iotcontainertt.azurecr.io/FaceViewer",
+        "repository": "iotcontainertt.azurecr.io/faceviewer",
         "tag": {
             "version": "0.0.1",
             "platforms": {
