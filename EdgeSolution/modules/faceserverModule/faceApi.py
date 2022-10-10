@@ -1,3 +1,4 @@
+from cmath import log
 import sys
 
 import base64
@@ -22,7 +23,7 @@ import logging
 import numpy
 from Tracking.FaceAPI import FaceDetection, DetectionBase
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 try:
     import ptvsd
     ptvsd.enable_attach()
@@ -34,11 +35,16 @@ app=Flask(__name__)
 
 try:
     detector = FaceDetection()
-except:
+except Exception as e:
+    logging.info("FaceAPI not available")
+    logging.exception(e)
     detector = DetectionBase()
-
+    
 dapr_port = int(os.getenv("DAPR_HTTP_PORT", 3000))
 use_faceapi = os.getenv("FACEAPI_USED",False)
+
+logging.info(f"DAPR_PORT: {dapr_port}")
+logging.info(f"FACEAPI_USED: {use_faceapi}")
 
 def sendToStateStore(img, payload):
     try:
@@ -52,11 +58,17 @@ def sendToStateStore(img, payload):
         gender = ""
         
         if use_faceapi:
+            logging.debug("FaceAPI used")
             detection = detector.detect_single(open_cv_image)
+            
             if detection is not None:
                 faceId = detection.face_id
                 gender = detection.face_attributes.gender
-
+            else:
+                logging.debug("No face detected")
+        else:
+            logging.debug("no FaceAPI request sent")
+            
         # pack the image
         ret, imgJpg = cv2.imencode('.jpg', open_cv_image)
         print(imgJpg)

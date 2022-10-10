@@ -142,7 +142,7 @@ class VideoProcessor():
                 except Exception as e:
                     print(e, flush=True)
                     shared['processStop'] = True
-                    logging.error(e)
+                    log.error(e)
 
             
     async def __getObjectDetails__(self, frame, clipregion, id):
@@ -158,27 +158,27 @@ class VideoProcessor():
             if clippedImage.any():
                 cropped = cv2.imencode('.jpg', clippedImage)[1].tobytes()
                 try:
-                    logging.info(f'{id} - {len(cropped)}')
+                    log.info(f'{id} - {len(cropped)}')
                     async with aiohttp.ClientSession() as session:
                         data = aiohttp.FormData()
                         data.add_field('imageData', cropped, filename='image.jpg')
                         data.add_field('id',f"{id}")
                         async with session.post(self.dapr_url , data=data, timeout=5, headers = {"dapr-app-id": "faceserver"}) as resp:
                             jsonResponse = await resp.json()
-                            logging.info(jsonResponse)
+                            log.info(jsonResponse)
                             if jsonResponse not in [None, {}]:
                                 result = jsonResponse
                                 gender = result['gender']
 
                 except Exception as e:
                     print("Error sending image to service", flush=True)
-                    logging.exception("Failed to detect gender")
+                    log.exception("Failed to detect gender")
             
             pString=f'Gender: {gender}'
             print(pString)
-            logging.debug(pString)
+            log.debug(pString)
         except Exception as ex:
-            logging.exception('No image')
+            log.exception('No image')
 
         return gender
 
@@ -224,7 +224,7 @@ class VideoProcessor():
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
         except Exception as e:
             print(e)
-            logging.exception('Failed to add faces')
+            log.exception('Failed to add faces')
             raise e
         #print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
@@ -260,8 +260,9 @@ class VideoProcessor():
                 yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
                 await asyncio.sleep(0.00001)  
             except Exception as e:
-                logging.error(e, exc_info=True)
+                log.error(e, exc_info=True)
                 shared['processStop'] = True
+                await self.restart(None)
                 break
 
 

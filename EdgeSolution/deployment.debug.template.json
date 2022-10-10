@@ -129,6 +129,11 @@
             "settings": {
               "image": "${MODULES.faceserverModule.debug}",
               "createOptions": {
+                "Env":[
+                  "FACE_API_KEY=${FACE_API_KEY}",
+                  "FACE_API_ENDPOINT=${FACE_API_ENDPOINT}",
+                  "FACEAPI_USED=True"
+                ],
                 "ExposedPorts": {
                   "5679/tcp": {}
                 },
