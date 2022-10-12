@@ -13,6 +13,9 @@ builder.Services.AddSingleton<WeatherForecastService>();
 
 var redis_cnn = Environment.GetEnvironmentVariable("REDIS_CONN_STR");
 var redis_key = Environment.GetEnvironmentVariable("REDIS_KEY");
+
+builder.Services.Configure<FACEAPI>(builder.Configuration.GetSection("FACEAPI"));
+
 builder.Services.AddStackExchangeRedisCache(options =>
         {
             //options.Configuration = builder.Configuration.GetConnectionString("Redis");
@@ -22,11 +25,12 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(
     new ConfigurationOptions{ 
-        EndPoints = { redis_cnn+":6379" },
+        EndPoints = { redis_cnn+":6380" },
         AbortOnConnectFail=true,
-        //Password = redis_key,
-        //Ssl = true
+        Password = redis_key,
+        Ssl = true
     }));
+
 
 var app = builder.Build();
 

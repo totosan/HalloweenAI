@@ -1,16 +1,17 @@
 @page "/images"
-
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Config
 <PageTitle>Faces</PageTitle>
 <div class="board">
     <div class="board-side">
         <ul>
             <li>
-                <button @onclick="onClickDelete" > Delete all</button>
+                <button @onclick="onClickDelete"> Delete all</button>
             </li>
         </ul>
     </div>
     <div class="cards">
-        @foreach (var item in getImagesFromDir())
+        @foreach (var item in getImagesFromDirAsBase64())
         {
             <div class="card">
                 <header>@item.Extra</header>
