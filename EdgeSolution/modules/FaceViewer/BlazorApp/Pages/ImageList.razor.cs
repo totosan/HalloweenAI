@@ -32,10 +32,10 @@ namespace BlazorApp.Pages
         {
             return new FaceClient(new ApiKeyServiceClientCredentials(key)) { Endpoint = endpoint };
         }
-        //find similar faces from Azure FaceAPI
+
         private async Task<IList<SimilarFace>> getSimilarFaces(string faceId1, string faceId2)
         {
-            IList<SimilarFace> similarResults = await _client.Face.FindSimilarAsync(new Guid(faceId1), null, null, new List<Guid?>{ new Guid(faceId2)});
+            var similarResults = await _client.Face.FindSimilarAsync(new Guid(faceId1), null, null, new List<Guid?>{ new Guid(faceId2)});
             return similarResults;
         }
 
@@ -74,18 +74,12 @@ namespace BlazorApp.Pages
 
         protected override void OnInitialized()
         {
-            if (Config != null) {
+            Status = "OnInitialized";   
+            const string RECOGNITION_MODEL4 = RecognitionModel.Recognition04;
 
-        var c = Config.GetSection("FACEAPI").Value;
-
-        Console.WriteLine(c);
-    }
-            //Console.WriteLine(FaceOptions.ENDPOINT);
-            //Status = "OnInitialized";   
-            //const string RECOGNITION_MODEL4 = RecognitionModel.Recognition04;
-//
-            //// Authenticate.
-            //_client = Authenticate(FaceOptions.ENDPOINT, FaceOptions.KEY);
+            // Authenticate.
+            _client = Authenticate(FaceOptions.Value.ENDPOINT, FaceOptions.Value.KEY);
+            Console.WriteLine("auhthenticated");
         } 
         protected void onClickDelete()
         {
