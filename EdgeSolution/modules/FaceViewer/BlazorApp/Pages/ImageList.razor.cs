@@ -85,6 +85,7 @@ namespace BlazorApp.Pages
 
             _halloweenFaces = new HalloweenFaces(this.Config);
             await _halloweenFaces.Init();
+            await _halloweenFaces.RecreateFaceList();
             _inmemoryRedisFaces = await LoadRedisFaces();
 
             var throttledStateHasChanged = Throttle(

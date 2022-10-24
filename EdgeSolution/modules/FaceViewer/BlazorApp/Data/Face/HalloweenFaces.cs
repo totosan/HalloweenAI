@@ -90,7 +90,7 @@ public class HalloweenFaces
     public async Task<RedisRecord?> AddFace(RedisRecord face)
     {
         var invalidFaceRecord = await faceOps.AddFacesToFaceListAsync(new List<RedisRecord> { face });
-        Task.Delay(50).Wait();
+        await Task.Delay(50);
         var facesAdded = await faceOps.GetFacesFromFaceListAsync();
         _storedFaces.Clear();
         _storedFaces.AddRange(facesAdded);

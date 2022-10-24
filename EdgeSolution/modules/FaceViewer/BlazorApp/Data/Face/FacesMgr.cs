@@ -108,7 +108,7 @@ public class FacesMgr
             {
                 try
                 {
-                    Task.Delay(50).Wait();
+                    //await Task.Delay(50);
                     await Client.FaceList.AddFaceFromStreamAsync(FACELISTID,
                      ms,
                      userData: jsonMetaData,
