@@ -18,28 +18,17 @@ namespace BlazorApp.Pages
         private IConnectionMultiplexer? _cnnMulti;
         [Inject]
         protected IConnectionMultiplexer CnnMulti { get => _cnnMulti; set => _cnnMulti = value; }
-        
+
         [Inject]
         protected IConfiguration Config { get; set; }
 
-        [Inject]
-        protected IOptions<FACEAPI> FaceOptions { get; set; }
-
         public string Status { get; set; }
 
-        IFaceClient _client;
-        public static IFaceClient Authenticate(string endpoint, string key)
-        {
-            return new FaceClient(new ApiKeyServiceClientCredentials(key)) { Endpoint = endpoint };
-        }
+        private HalloweenFaces _halloweenFaces;
 
-        private async Task<IList<SimilarFace>> getSimilarFaces(string faceId1, string faceId2)
-        {
-            var similarResults = await _client.Face.FindSimilarAsync(new Guid(faceId1), null, null, new List<Guid?>{ new Guid(faceId2)});
-            return similarResults;
-        }
+        public List<FaceResult> images = new List<FaceResult>();
+        List<RedisRecord> _inmemoryRedisFaces;
 
-        
         protected IEnumerable<RedisRecord> getImagesFromDir()
         {
             var servers = CnnMulti.GetEndPoints();
@@ -61,26 +50,79 @@ namespace BlazorApp.Pages
             }
         }
 
-        protected IEnumerable<FaceResult> getImagesFromDirAsBase64()
+        protected async IAsyncEnumerable<FaceResult> getImagesFromDirAsBase64()
         {
-            foreach (var face in getImagesFromDir())
+            foreach (var group in _halloweenFaces.Groups)
             {
-                Encoding iso = Encoding.GetEncoding("ISO-8859-1");
-                getSimilarFaces(face.face_id,"ce4c7425-e289-4c2a-bf67-54d5d86cc7c4").GetAwaiter().GetResult();
-                var result = face.img;
-                yield return new FaceResult { Base64Src = "data:image/png;base64," + result, Gender = $"{face.gender}", Extra = face.gender };
+                foreach (var item in group)
+                {
+                    var face = _inmemoryRedisFaces.Where(x => x.face_id == item.ToString()).FirstOrDefault();
+                    if (face != null)
+                    {
+                        var result = face.img;
+                        yield return new FaceResult { Base64Src = "data:image/png;base64," + result, Gender = $"{face.gender}", Extra = face.gender };
+                    }
+                }
             }
         }
 
-        protected override void OnInitialized()
+        private async Task<List<RedisRecord>> LoadRedisFaces()
         {
-            Status = "OnInitialized";   
-            const string RECOGNITION_MODEL4 = RecognitionModel.Recognition04;
+            List<RedisRecord> inmemoryRedisFaces = new List<RedisRecord>();
+            foreach (var face in getImagesFromDir())
+            {
+                Encoding iso = Encoding.GetEncoding("ISO-8859-1");
+                var resultInvalid = await _halloweenFaces.AddFaceAndGroup(face);
+                inmemoryRedisFaces.Add(face);
+            }
 
-            // Authenticate.
-            _client = Authenticate(FaceOptions.Value.ENDPOINT, FaceOptions.Value.KEY);
-            Console.WriteLine("auhthenticated");
-        } 
+            return inmemoryRedisFaces;
+        }
+
+        protected override async Task OnInitializedAsync()
+        {
+            Status = "OnInitialized";
+
+            _halloweenFaces = new HalloweenFaces(this.Config);
+            await _halloweenFaces.Init();
+            _inmemoryRedisFaces = await LoadRedisFaces();
+
+            var throttledStateHasChanged = Throttle(
+                        () => InvokeAsync(StateHasChanged),
+                        TimeSpan.FromMilliseconds(500));
+
+            images = new List<FaceResult>();
+            await foreach (var image in getImagesFromDirAsBase64())
+            {
+                images.Add(image);
+                throttledStateHasChanged();
+            }
+        }
+
+        // https://www.meziantou.net/debouncing-throttling-javascript-events-in-a-blazor-application.htm#throttle-debounce-on
+        private static Action Throttle(Action action, TimeSpan interval)
+        {
+            Task task = null;
+            var l = new object();
+            return () =>
+            {
+                if (task != null)
+                    return;
+
+                lock (l)
+                {
+                    if (task != null)
+                        return;
+
+                    task = Task.Delay(interval).ContinueWith(t =>
+                    {
+                        action();
+                        task = null;
+                    });
+                }
+            };
+        }
+
         protected void onClickDelete()
         {
             this.Status = "";
