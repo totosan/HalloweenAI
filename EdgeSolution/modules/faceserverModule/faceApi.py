@@ -9,11 +9,7 @@ sys.path.append("../Tracking/")
 
 from crypt import methods
 from distutils.log import debug
-import io, os, requests, json
-import struct
-from itertools import count
-from datetime import datetime
-from urllib import response
+import io, os, json
 
 from flask import Flask, request, jsonify
 from dapr.clients import DaprClient
@@ -85,6 +81,12 @@ def sendToStateStore(img, payload):
     except Exception as e:
         logging.exception(e)
 
+def broadcastFace(faceId):
+    # send faceId to rest api
+    response = request.post("http://FaceViewer:8081/api/face", data={'faceId':faceId})
+    if response.status_code == 200:
+        logging.info("FaceViewer updated")
+    
 @app.route("/", methods=['POST','GET'])
 def faceCallApi():
     print("faceCallApi")
@@ -109,6 +111,9 @@ def faceCallApi():
 
         # send to state store
         response = sendToStateStore(img,payload)
+        if(response is not None):
+            broadcastFace(response['faceId'])
+        
         return jsonify(response), 200
     except Exception as e:
         print('EXCEPTION:', str(e))

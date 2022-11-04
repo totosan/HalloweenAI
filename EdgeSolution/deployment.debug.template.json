@@ -63,7 +63,7 @@
         },
         "modules": {
           "redisStore": {
-            "version": "1.1",
+            "version": "1.9",
             "type": "docker",
             "status": "running",
             "restartPolicy": "always",
@@ -74,7 +74,7 @@
                   "PortBindings": {
                     "6379/tcp": [
                       {
-                        "HostPort": "6380"
+                        "HostPort": "6379"
                       }
                     ]
                   }
@@ -158,8 +158,11 @@
               "image": "${MODULES.FaceViewer.debug}",
               "createOptions": {
                 "Env": [
-                  "REDIS_CONN_STR=${REDIS_HOST}",
-                  "REDIS_KEY=${REDIS_KEY}"
+                  "REDIS_CONN_STR=${REDIS_CONN_STR}",
+                  "REDIS_KEY=${REDIS_KEY}",
+                  "REDIS_PORT=${REDIS_PORT}",
+                  "FACE_API_KEY=${FACE_API_KEY}",
+                  "FACE_API_ENDPOINT=${FACE_API_ENDPOINT}"
                 ],
                 "ExposedPorts": {
                   "443/tcp": {},

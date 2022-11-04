@@ -9,7 +9,7 @@ public class RedisAccess
     {
         var redis_cnn = config["REDIS_CONN_STR"];
         var redis_key = config["REDIS_KEY"];
-        var redis_port = config["Redis:REDIS_PORT"];
+        var redis_port = config["REDIS_PORT"];
 
         // write all redis vars out
         Console.WriteLine($"{redis_cnn}:{redis_port} with key {redis_key}");

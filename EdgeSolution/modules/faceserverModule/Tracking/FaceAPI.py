@@ -25,7 +25,7 @@ class FaceDetection(DetectionBase):
         cv2.imwrite(imageName,frame) 
         copyFrame = open(imageName,"r+b")
         try:
-            detected_faces = self.face_client.face.detect_with_stream( copyFrame, detection_model='detection_01', recognition_model='recognition_04', return_face_attributes=['age','gender'])
+            detected_faces = self.face_client.face.detect_with_stream( copyFrame, detection_model='detection_03', recognition_model='recognition_04', return_face_attributes=['age','gender'])
         except Exception as e:
             print(e)
             detected_faces = None
