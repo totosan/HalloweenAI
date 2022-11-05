@@ -30,6 +30,7 @@ from VideoCapture.MultiProcessingLog import MultiProcessingLog
 from applicationinsights.logging import LoggingHandler
 
 import logging
+logging.basicConfig(level=logging.INFO)
 
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
@@ -202,12 +203,13 @@ class VideoProcessor():
             for (objId, centroidItem) in trackedCentroidItems.items():
                 trackedIdObj = self.trackableIDs.get(objId,None)
                 gender = ""
-                if trackedIdObj is None and self.dapr_used:
-                    print(f"New face detected: {objId}")
-                    result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
-                    if result is not None and result != "":
-                        gender = result
-                        centroidItem.class_type = gender
+                if self.dapr_used == True:
+                    if trackedIdObj is None:
+                        print(f"New face detected: {objId}")
+                        result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
+                        if result is not None and result != "":
+                            gender = result
+                            centroidItem.class_type = gender
                     
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj

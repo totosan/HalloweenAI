@@ -12,8 +12,10 @@ docker build . --file ./Dockers/Dockerfile-$ARCH \
 --build-arg VIDEO_PATH=$VIDEO_PATH \
 --build-arg DAPR_USED=$DAPR_USED \
 --build-arg APP_INSIGHTS_KEY=$APP_INSIGHTS_KEY \
---tag totosan/facedetection:$ARCH-$VERS
+--tag totosan/facedetection:$ARCH-$VERS \
+--tag totosan/facedetection:$ARCH-latest 
 docker push totosan/facedetection:$ARCH-$VERS
+docker push totosan/facedetection:$ARCH-latest
 
 exit 0
 fi
