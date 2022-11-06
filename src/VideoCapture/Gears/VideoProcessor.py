@@ -31,7 +31,7 @@ from applicationinsights.logging import LoggingHandler
 
 import logging
 logging.basicConfig(level=logging.INFO)
-
+log = logging.getLogger(__name__)
 # debugger exception with EOFError <-- reason: bug in debugger on multiprocessing
 
 DETECTOR_PROCESS_NUM = 1
@@ -44,7 +44,7 @@ class VideoProcessor():
     def __init__(self, Detector) -> None:
         video_source = os.getenv("VIDEO_PATH","video.mp4")
         streamMode = True if "youtu" in video_source else False
-        self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3500)
+        self.dapr_port = os.getenv("DAPR_HTTP_PORT", 3000)
         self.dapr_url = os.getenv("DAPR_HTTP_URL","http://localhost:{}/").format(self.dapr_port)
         self.dapr_used = os.getenv("DAPR_USED", False)
 
@@ -62,14 +62,14 @@ class VideoProcessor():
         print(f'* Streaming: {streamMode}')
         print(f'* Config: {self.options}')
         print("**************************")
-        logging.info(dumps({'Video': video_source,
+        log.info(dumps({'Video': video_source,
                             'Streaming': streamMode,
                             'Config': self.options,
                             'DaprUsed': self.dapr_used,
                             'DaprUrl': self.dapr_url}))
 
         self.stream_org = VideoGear(source=video_source, stream_mode=streamMode, framerate=25).start()
-        self.web_stream = WebGear(logging=False, **self.options)
+        self.web_stream = WebGear(logging=True, **self.options)
         self.web_stream.routes.append(Route("/restart", endpoint=self.restart, methods=["GET"]))
 
         # add your custom frame producer to config
@@ -142,7 +142,7 @@ class VideoProcessor():
                 except Exception as e:
                     print(e, flush=True)
                     shared['processStop'] = True
-                    logging.error(e)
+                    log.error(e)
 
             
     async def __getObjectDetails__(self, frame, clipregion, id):
@@ -158,27 +158,27 @@ class VideoProcessor():
             if clippedImage.any():
                 cropped = cv2.imencode('.jpg', clippedImage)[1].tobytes()
                 try:
-                    logging.info(f'{id} - {len(cropped)}')
+                    log.info(f'{id} - {len(cropped)}')
                     async with aiohttp.ClientSession() as session:
                         data = aiohttp.FormData()
                         data.add_field('imageData', cropped, filename='image.jpg')
                         data.add_field('id',f"{id}")
                         async with session.post(self.dapr_url , data=data, timeout=5, headers = {"dapr-app-id": "faceserver"}) as resp:
                             jsonResponse = await resp.json()
-                            logging.info(jsonResponse)
+                            log.info(jsonResponse)
                             if jsonResponse not in [None, {}]:
                                 result = jsonResponse
                                 gender = result['gender']
 
                 except Exception as e:
                     print("Error sending image to service", flush=True)
-                    logging.exception("Failed to detect gender")
+                    log.exception("Failed to detect gender")
             
             pString=f'Gender: {gender}'
             print(pString)
-            logging.debug(pString)
+            log.debug(pString)
         except Exception as ex:
-            logging.exception('No image')
+            log.exception('No image')
 
         return gender
 
@@ -203,13 +203,13 @@ class VideoProcessor():
             for (objId, centroidItem) in trackedCentroidItems.items():
                 trackedIdObj = self.trackableIDs.get(objId,None)
                 gender = ""
-                if self.dapr_used == True:
-                    if trackedIdObj is None:
-                        print(f"New face detected: {objId}")
-                        result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
-                        if result is not None and result != "":
-                            gender = result
-                            centroidItem.class_type = gender
+            
+                if trackedIdObj is None:
+                    print(f"New face detected: {objId}")
+                    result = await self.__getObjectDetails__(frame, centroidItem.rect, objId)
+                    if result is not None and result != "":
+                        gender = result
+                        centroidItem.class_type = gender
                     
                 trackedIdObj = DetectionHelper.historizeCentroid(trackedIdObj, objId,centroidItem,50)
                 self.trackableIDs[objId] = trackedIdObj
@@ -225,7 +225,7 @@ class VideoProcessor():
                 DetectionHelper.drawMovementArrow(frame,trackedIdObj,centroidItem.center)
         except Exception as e:
             print(e)
-            logging.exception('Failed to add faces')
+            log.exception('Failed to add faces')
             raise e
         #print(f'No. of trackedFaces: {len(self.trackingManager.correlationTrackers)}')
         return frame       
@@ -260,9 +260,10 @@ class VideoProcessor():
                 yield (b"--frame\r\nContent-Type:video/jpeg2000\r\n\r\n" + encodedImage + b"\r\n")
                 await asyncio.sleep(0.00001)  
             except Exception as e:
-                logging.error(e, exc_info=True)
-                #shared['processStop'] = True
-                #break
+                log.error(e, exc_info=True)
+                shared['processStop'] = True
+                await self.restart(None)
+                break
 
 
 import signal

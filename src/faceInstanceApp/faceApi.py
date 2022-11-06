@@ -21,7 +21,7 @@ import numpy
 from Tracking.FaceAPI import FaceDetection
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
  
 try:
     import ptvsd
@@ -56,14 +56,13 @@ def sendToStateStore(img, payload):
 
         # pack the image
         ret, imgJpg = cv2.imencode('.jpg', open_cv_image)
-        print(imgJpg)
         b64Image = base64.b64encode(imgJpg)
  
         values={'face_id':faceId, 'gender':gender, 'img':bytes.decode(b64Image, encoding='ISO-8859-1')}
         if True:
             with DaprClient() as d:
                 # Save state
-                print(f"sending FaceId to storage")
+                logging.info(f"sending FaceId to storage")
                 jsonValues = json.dumps(values)
                 d.save_state(store_name="statestore", key=str(payload), value=jsonValues)
         return {'faceId':faceId, 'gender':gender}

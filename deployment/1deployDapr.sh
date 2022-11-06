@@ -39,7 +39,7 @@ az containerapp create \
     --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" "DAPR_USED=True" \
     --ingress external\
     --target-port 8080 \
-    --revision-suffix ${VERS//\./-}2 \
+    --revision-suffix ${VERS//\./-} \
     --cpu 2.0\
     --memory 4.0Gi \
     --min-replicas 1 \

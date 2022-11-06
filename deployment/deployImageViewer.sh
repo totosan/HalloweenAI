@@ -7,7 +7,7 @@ CONTAINERAPPSVIEWER_NAME=imageviewer
 #override ARCH with input, if not empty
 if [ -n "${1}" ]; then
   docker build . \
-    -f ./Dockers/ImageView.Dockerfile \
+    -f ./Dockers/Dockerfile.ImageViewer.amd64 \
     --build-arg REDIS_CONN_STR=$REDIS_CONN_STR \
     --build-arg REDIS_KEY=$REDIS_KEY \
     -t totosan/redis-imageviewer:$ARCH-$VERS \
@@ -22,12 +22,18 @@ fi
     --name $CONTAINERAPPSVIEWER_NAME \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
+    --secrets "rediskey=$REDIS_KEY" "faceapikey=$FACE_API_KEY" \
+    --env-vars "REDIS_CONN_STR=$REDIS_CONN_STR" \
+    "REDIS_KEY=secretref:rediskey" \
+    "REDIS_PORT=6380" \
+    "FACE_API_ENDPOINT=$FACE_API_ENDPOINT" \
+    "FACE_API_KEY=secretref:faceapikey" \
     --revision-suffix ${VERS//\./-} \
     --ingress external \
-    --target-port 3500 \
+    --target-port 80 \
     --transport http \
     --min-replicas 1 \
-    --max-replicas 10 \
+    --max-replicas 2 \
     --cpu 2.0 \
     --memory 4.0Gi
 
