@@ -251,7 +251,6 @@ class VideoProcessor():
                     frame = await self.addFacesIfExists(frame_org)
                 
                 #print(f'InQ: {self.inputQ.qsize()} OutQ: {self.outputQ.qsize()}')
-
                 # reducer frames size if you want more performance otherwise comment this line
                 frame = await reducer(frame, percentage=30)  # reduce frame by 30%
                 # handle JPEG encoding
@@ -262,8 +261,8 @@ class VideoProcessor():
                 await asyncio.sleep(0.00001)  
             except Exception as e:
                 logging.error(e, exc_info=True)
-                shared['processStop'] = True
-                break
+                #shared['processStop'] = True
+                #break
 
 
 import signal

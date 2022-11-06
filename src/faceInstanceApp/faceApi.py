@@ -17,10 +17,12 @@ from flask import Flask, request, jsonify
 from dapr.clients import DaprClient
 from PIL import Image
 import cv2
-import logging 
 import numpy
 from Tracking.FaceAPI import FaceDetection
 
+import logging
+logging.basicConfig(level=logging.INFO)
+ 
 try:
     import ptvsd
     ptvsd.enable_attach()

@@ -29,10 +29,7 @@ fi
     --min-replicas 1 \
     --max-replicas 10 \
     --cpu 2.0 \
-    --memory 4.0Gi \
-    --enable-dapr \
-    --dapr-app-port 3500 \
-    --dapr-app-id imageviewer
+    --memory 4.0Gi
 
 sleep 5
 echo "Deployment complete"

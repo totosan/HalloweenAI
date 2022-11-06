@@ -36,10 +36,10 @@ az containerapp create \
     --resource-group $RESOURCE_GROUP \
     --environment $CONTAINERAPPS_ENVIRONMENT \
     --secrets "app-insight-key=$APP_INSIGHTS_KEY" \
-    --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
+    --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" "DAPR_USED=True" \
     --ingress external\
     --target-port 8080 \
-    --revision-suffix ${VERS//\./-} \
+    --revision-suffix ${VERS//\./-}2 \
     --cpu 2.0\
     --memory 4.0Gi \
     --min-replicas 1 \
