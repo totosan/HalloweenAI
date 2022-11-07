@@ -10,6 +10,7 @@ using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.Extensions.Options;
 using BlazorApp.Data;
+using System.Drawing;
 
 namespace BlazorApp.Pages
 {
@@ -52,6 +53,7 @@ namespace BlazorApp.Pages
 
         protected async IAsyncEnumerable<FaceResult> getImagesFromDirAsBase64()
         {
+            var groupCount = 0;
             foreach (var group in _halloweenFaces.Groups)
             {
                 foreach (var item in group)
@@ -60,9 +62,10 @@ namespace BlazorApp.Pages
                     if (face != null)
                     {
                         var result = face.img;
-                        yield return new FaceResult { Base64Src = "data:image/png;base64," + result, Gender = $"{face.gender}", Extra = face.gender };
+                        yield return new FaceResult { Base64Src = "data:image/png;base64," + result, Gender = $"{face.gender}", Extra = face.gender, Group = groupCount.ToString() };
                     }
                 }
+                groupCount++;
             }
         }
 

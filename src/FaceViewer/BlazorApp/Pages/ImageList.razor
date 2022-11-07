@@ -12,7 +12,7 @@
     <div class="cards">
         @foreach (var item in images)
         {
-            <div class="card">
+            <div class="card" style="border-color: @item.Group ;">
                 <header>@item.Extra</header>
                 <img src="@item.Base64Src" class="face" alt="@item.Extra" />
 

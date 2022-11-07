@@ -17,10 +17,6 @@ fi
 echo "*******************************************************************************"
 echo " Update Container Apps environment"
 echo "*******************************************************************************"
-az containerapp env dapr-component set \
-    --name $CONTAINERAPPS_ENVIRONMENT --resource-group $RESOURCE_GROUP \
-    --dapr-component-name statestore \
-    --yaml ./deployment/redis.local.yaml
 
   az containerapp create \
     --image totosan/facedetectionapp:$ARCH-$VERS \
