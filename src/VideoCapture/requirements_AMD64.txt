@@ -10,7 +10,7 @@ azure-cognitiveservices-vision-face==0.5.0
 Pillow
 yt_dlp
 simplejpeg
-scipy==1.7.2
+scipy==1.10.0
 imutils==0.5.4
 coils
 vidgear==0.2.4
