@@ -123,5 +123,4 @@ jobs:
           --cpu 2.0 \
           --memory 4.0Gi \
           --enable-dapr \
-          --dapr-app-port 3500 \
           --dapr-app-id faceserver
