@@ -47,7 +47,7 @@ This project targets **MS Azure** as cloud backend. So make sure, if you want to
 
 - you can use below statement to set env vars in system from **.env** file
 - TIP: just create .local.env file as copy from .env!! All files with '.local.' (see .gitignore) will be ignored from git commit. So your credentials resides just locally.
-```
+```sh
 export $(grep -v '^#' .env | xargs -d '\n')
 ```
 - I suggest creating a virtual env, if you work with this on your local equipment.
