@@ -124,7 +124,7 @@ jobs:
           --name $CONTAINERAPPSSERVER_NAME \
           --resource-group $RESOURCE_GROUP \
           --environment $CONTAINERAPPS_ENVIRONMENT \
-          --secrets "app-insight-key=$APP_INSIGHTS_KEY" \
+          --secrets "app-insight-key=${{ secrets.APP_INSIGHTS_KEY }}" \
           --env-vars "APP_INSIGHTS_KEY=secretref:app-insight-key" \
           --ingress external \
           --target-port 3500 \
