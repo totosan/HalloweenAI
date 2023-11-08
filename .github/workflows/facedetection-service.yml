@@ -91,7 +91,18 @@ jobs:
 
     - name: create DAPR component (statestore)
       run: ./deployment/createRedisYaml.sh > /dev/null
-   
+
+    - name: create CONTAINER APP ENVironment
+      if: ${{ env.ARCH == 'amd64' }}
+      run: |
+        az containerapp env create \
+        --dapr-instrumentation-key ${{ secrets.APP_INSIGHTS_KEY }} \
+        --name $CONTAINERAPPS_ENVIRONMENT \
+        --resource-group $RESOURCE_GROUP \
+        --location $LOCATION \
+        --logs-workspace-id ${{ secrets.LOG_ANALYTICS_WORKSPACE_CLIENT_ID }} \
+        --logs-workspace-key ${{ secrets.WSKEY }}
+        
     - name: enable DAPR in ENVironment
       env:
         REDIS_NAME: "facesink002"
