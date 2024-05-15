@@ -2,8 +2,8 @@
 set -e
 
 ARCH=amd64
-VERS="app"
-VIDEO_PATH=https://youtu.be/G1VvHZ25j_k
+VERS="app2"
+VIDEO_PATH=https://youtu.be/oGHvwFtqGp4?si=V6Sb6Cjxa5QRE3F0
 DAPR_USED=True
 
 #override ARCH with input, if not empty
